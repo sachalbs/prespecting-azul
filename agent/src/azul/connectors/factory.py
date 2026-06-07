@@ -8,8 +8,8 @@ from azul.connectors.stub import StubChannel
 
 
 def get_channel() -> Channel:
-    if get_settings().channel == "unipile":
-        from azul.connectors.unipile import UnipileChannel
+    if get_settings().channel == "graph":
+        from azul.connectors.graph import GraphChannel
 
-        return UnipileChannel()
+        return GraphChannel()
     return StubChannel()

@@ -8,10 +8,10 @@ from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-SourcingProvider = Literal["stub", "waterfall"]
+SourcingProvider = Literal["stub", "prospeo", "waterfall"]
 ResearchEngineName = Literal["stub", "holo3"]
 WriterProvider = Literal["stub", "openai_compat"]
-ChannelName = Literal["stub", "unipile"]
+ChannelName = Literal["stub", "graph"]
 
 
 class Settings(BaseSettings):
@@ -33,26 +33,34 @@ class Settings(BaseSettings):
     writer_provider: WriterProvider = "stub"
     channel: ChannelName = "stub"
 
-    # Sourcing waterfall
+    # Sourcing (Prospeo enrich = find + verify + dossier; Hunter/Dropcontact optional)
     prospeo_api_key: str | None = None
     hunter_api_key: str | None = None
     dropcontact_api_key: str | None = None
 
-    # Research (Holo3)
-    holo3_api_key: str | None = None
-    holo3_base_url: str = "https://api.holo3.ai"
+    # Research — Holo3 computer-use (OpenAI-compatible, drives a headless browser)
+    hai_api_key: str | None = None
+    holo_base_url: str = "https://api.hcompany.ai/v1"
+    holo_model: str = "holo3-35b-a3b"
+    holo_max_steps: int = 25
+    holo_timeout_s: int = 120
+    holo_headless: bool = True
+    # Path to a Playwright storage_state JSON with a logged-in LinkedIn session.
+    linkedin_storage_state: str | None = None
 
-    # Writer (GLM-5.1 / DeepSeek V4 — OpenAI-compatible)
+    # Writer (GLM-5.1 / DeepSeek V4 — OpenAI-compatible). Playbook = system prompt.
     writer_api_key: str | None = None
     writer_base_url: str | None = None
     writer_model: str | None = None
     writer_temperature: float = 0.7
+    writer_playbook_path: str = "AZUL_COLD_OUTREACH_PLAYBOOK.md"
 
-    # Connector (Unipile)
-    unipile_api_key: str | None = None
-    unipile_dsn: str | None = None
-    unipile_account_id: str | None = None
-    unipile_webhook_secret: str | None = None
+    # Connector — Microsoft Graph (Outlook), send from the real mailbox + poll replies
+    graph_client_id: str | None = None
+    # Personal Outlook accounts live under the "consumers" tenant.
+    graph_authority: str = "https://login.microsoftonline.com/consumers"
+    graph_token_cache: str = ".msal_cache.bin"
+    webhook_secret: str | None = None
 
     # Deliverability — pace sends, never spray
     send_min_delay_seconds: int = 45

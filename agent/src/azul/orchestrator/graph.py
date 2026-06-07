@@ -7,6 +7,7 @@ in-process HITL, it becomes a LangGraph `interrupt()` right after `write` here.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
@@ -34,7 +35,17 @@ def build_pipeline(
         result = verifier.verify(
             brief.email, full_name=brief.full_name, company_domain=brief.company_domain
         )
-        return {"email_status": result.status}
+        # Fold the dossier into the brief so research + writer can use it.
+        signals = dict(brief.signals)
+        if result.dossier:
+            signals["dossier"] = result.dossier
+        enriched = replace(brief, email=result.email or brief.email, signals=signals)
+        return {
+            "prospect": enriched,
+            "email_status": result.status,
+            "resolved_email": result.email,
+            "dossier": result.dossier,
+        }
 
     def route_after_verify(state: ProspectState) -> str:
         # Deliverability gate: only verified addresses proceed.

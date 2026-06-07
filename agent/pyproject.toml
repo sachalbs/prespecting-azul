@@ -24,6 +24,9 @@ dependencies = [
     # Reply webhook receiver (Unipile -> outcomes)
     "fastapi>=0.115",
     "uvicorn>=0.30",
+    # Phase A — real adapters
+    "playwright>=1.47",   # Holo3 computer-use research (headless browser)
+    "msal>=1.31",         # Microsoft Graph (Outlook) OAuth token acquisition
 ]
 
 [project.scripts]

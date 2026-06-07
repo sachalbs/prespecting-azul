@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, ClassVar
 
 from azul.enums import Channel as ChannelEnum
@@ -47,3 +48,7 @@ class Channel(ABC):
     def parse_webhook(self, payload: dict[str, Any]) -> list[InboundReply]:
         """Turn a provider reply/bounce webhook into normalised inbound events."""
         raise NotImplementedError
+
+    def fetch_replies(self, since: datetime | None = None) -> list[InboundReply]:
+        """Poll the mailbox for new inbound replies/bounces. Default: none (override)."""
+        return []

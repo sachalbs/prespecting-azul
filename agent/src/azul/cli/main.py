@@ -139,5 +139,48 @@ def report(campaign: str = typer.Option(..., help="Campaign id or name")) -> Non
     typer.echo(f"REPLY RATE: {r.reply_rate:.0%}")
 
 
+@app.command("auth-email")
+def auth_email() -> None:
+    """One-time Microsoft consent (device code) to send/read from your Outlook box."""
+    from azul.connectors.graph_auth import device_code_login
+
+    device_code_login()
+    typer.echo("Email auth complete; token cached.")
+
+
+@app.command("sync-replies")
+def sync_replies(
+    since_hours: int = typer.Option(168, help="Look back this many hours"),
+) -> None:
+    """Poll the mailbox for replies/bounces and record outcomes."""
+    from datetime import UTC, datetime, timedelta
+
+    from azul.connectors import get_channel
+    from azul.memory import EpisodicMemory
+
+    since = datetime.now(UTC) - timedelta(hours=since_hours)
+    replies = get_channel().fetch_replies(since)
+    with session_scope() as session:
+        mem = EpisodicMemory(session)
+        recorded = sum(1 for r in replies if mem.ingest_reply(r) is not None)
+    typer.echo(f"Fetched {len(replies)} inbound, recorded {recorded} outcome(s).")
+
+
+@app.command("linkedin-login")
+def linkedin_login() -> None:
+    """Open a browser to log into LinkedIn once; saves the session for Holo research."""
+    from playwright.sync_api import sync_playwright
+
+    path = get_settings().linkedin_storage_state or ".linkedin_state.json"
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(headless=False)
+        ctx = browser.new_context()
+        ctx.new_page().goto("https://www.linkedin.com/login")
+        input("Log in to LinkedIn, then press Enter here to save the session... ")
+        ctx.storage_state(path=path)
+        browser.close()
+    typer.echo(f"Saved LinkedIn session to {path}")
+
+
 if __name__ == "__main__":
     app()

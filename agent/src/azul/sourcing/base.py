@@ -23,6 +23,8 @@ class EmailVerification:
     provider: str
     score: float | None = None
     raw: dict[str, Any] = field(default_factory=dict)
+    # Curated, provider-agnostic hook material (e.g. role, funding, job postings).
+    dossier: dict[str, Any] = field(default_factory=dict)
 
     @property
     def sendable(self) -> bool:

@@ -1,13 +1,23 @@
-"""Prompt construction for the Writer. Anti-template, anti-spray, anti-slop."""
+"""Prompt construction for the Writer.
+
+The system prompt = the cold-outreach playbook (WRITER_PLAYBOOK_PATH) — the
+writer's brain — with a strict JSON output contract always appended so parsing
+stays stable regardless of the playbook's prose. If the file is absent, a built-in
+anti-slop fallback is used so the pipeline still runs.
+"""
 
 from __future__ import annotations
 
 import json
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
+from azul.config import get_settings
 from azul.writing.base import DraftRequest
 
-SYSTEM_PROMPT = """\
+# Fallback playbook (used only if WRITER_PLAYBOOK_PATH is missing).
+FALLBACK_PLAYBOOK = """\
 You are an elite SDR who writes one outbound message at a time, by hand.
 Low volume, high quality. The only metric that matters is the reply rate.
 
@@ -18,12 +28,25 @@ Hard rules:
 - Max ~80 words for the body. One clear, low-friction ask.
 - Never invent facts. If the hook is weak, keep the claim modest.
 - Plain text. No markdown, no emojis, no signature block.
-
-Return STRICT JSON only, no prose, with keys:
-  "subject": short, specific, lowercase-ish, not clickbait (email only; else "")
-  "body": the message
-  "angle": 2-4 word label for the angle you took (for the learning log)
 """
+
+# Always appended — defines the machine-readable output we parse.
+OUTPUT_CONTRACT = """\
+Return STRICT JSON only, no prose, with exactly these keys:
+  "subject": short, specific, not clickbait (email only; else "")
+  "body": the message
+  "angle": a 2-4 word label for the angle you took (for the learning log)
+"""
+
+
+@lru_cache(maxsize=4)
+def _load_playbook(path: str) -> str:
+    p = Path(path)
+    return p.read_text(encoding="utf-8") if p.exists() else FALLBACK_PLAYBOOK
+
+
+def system_prompt() -> str:
+    return _load_playbook(get_settings().writer_playbook_path) + "\n\n" + OUTPUT_CONTRACT
 
 
 def build_messages(request: DraftRequest) -> list[dict[str, str]]:
@@ -38,16 +61,16 @@ def build_messages(request: DraftRequest) -> list[dict[str, str]]:
             "segment": p.segment,
         },
         "hook": request.hook,
+        "dossier": dict(p.signals),
         "sender_name": request.sender_name,
         "value_prop": request.value_prop,
     }
     user = (
-        "Write one outbound "
-        + request.channel
-        + " message using this context. Anchor it on the hook.\n\n"
-        + json.dumps(context, ensure_ascii=False, indent=2)
+        f"Write one outbound {request.channel} message using this context. "
+        "Anchor it on the hook.\n\n"
+        + json.dumps(context, ensure_ascii=False, indent=2, default=str)
     )
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": system_prompt()},
         {"role": "user", "content": user},
     ]

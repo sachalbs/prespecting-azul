@@ -41,7 +41,7 @@ async def replies(
     request: Request, x_webhook_secret: str | None = Header(default=None)
 ) -> dict[str, Any]:
     settings = get_settings()
-    if settings.unipile_webhook_secret and x_webhook_secret != settings.unipile_webhook_secret:
+    if settings.webhook_secret and x_webhook_secret != settings.webhook_secret:
         raise HTTPException(status_code=401, detail="bad webhook secret")
 
     payload: dict[str, Any] = await request.json()

@@ -138,32 +138,41 @@ def resolve_campaign(session: Session, ident: str) -> Campaign:
     return campaign
 
 
-def _brief(p: Prospect) -> ProspectBrief:
+def _brief_from_row(row: CsvRow) -> ProspectBrief:
     return ProspectBrief(
-        email=p.email,
-        full_name=p.full_name,
-        title=p.title,
-        company=p.company,
-        company_domain=p.company_domain,
-        segment=p.segment,
-        signals=dict(p.signals or {}),
+        email=row.email or "",
+        full_name=row.full_name,
+        title=row.title,
+        company=row.company,
+        company_domain=row.company_domain,
+        segment=row.segment,
+        signals=dict(row.signals),
     )
 
 
-def _upsert_prospect(session: Session, tenant: Tenant, row: CsvRow) -> Prospect:
+def _upsert_prospect(
+    session: Session,
+    tenant: Tenant,
+    *,
+    email: str,
+    row: CsvRow,
+    dossier: dict[str, object] | None = None,
+) -> Prospect:
     p = session.scalars(
-        select(Prospect).where(Prospect.tenant_id == tenant.id, Prospect.email == row.email)
+        select(Prospect).where(Prospect.tenant_id == tenant.id, Prospect.email == email)
     ).first()
     if p is None:
-        p = Prospect(tenant_id=tenant.id, email=row.email, source="csv")
+        p = Prospect(tenant_id=tenant.id, email=email, source="csv")
         session.add(p)
     p.full_name = row.full_name or p.full_name
     p.title = row.title or p.title
     p.company = row.company or p.company
     p.company_domain = row.company_domain or p.company_domain
     p.segment = row.segment or p.segment
-    if row.signals:
-        p.signals = {**(p.signals or {}), **row.signals}
+    merged: dict[str, object] = {**(p.signals or {}), **row.signals}
+    if dossier:
+        merged["dossier"] = dossier
+    p.signals = merged
     session.flush()
     return p
 
@@ -216,19 +225,25 @@ def run_campaign(
     pipeline = build_pipeline()
 
     for row in rows:
-        prospect = _upsert_prospect(session, tenant, row)
-        membership = _ensure_membership(session, campaign, prospect)
-
         state = pipeline.invoke(
             {
-                "prospect": _brief(prospect),
+                "prospect": _brief_from_row(row),
                 "sender_name": sender_name,
                 "value_prop": value_prop,
             }
         )
 
         email_status = state.get("email_status", EmailStatus.UNKNOWN)
+        resolved_email = state.get("resolved_email") or row.email
+        if not resolved_email:
+            log.info("prospect_skipped", reason="no_email_found", company=row.company)
+            continue
+
+        prospect = _upsert_prospect(
+            session, tenant, email=resolved_email, row=row, dossier=state.get("dossier") or {}
+        )
         prospect.email_status = email_status
+        membership = _ensure_membership(session, campaign, prospect)
         if email_status != EmailStatus.VERIFIED:
             membership.status = MembershipStatus.SKIPPED
             log.info("prospect_skipped", email=prospect.email, email_status=email_status)
