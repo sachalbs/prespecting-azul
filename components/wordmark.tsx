@@ -1,11 +1,11 @@
 /** Wordmark lockup — "AZUL" + a cobalt square, in the ELYS spirit. */
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <span className={`inline-flex items-end gap-[0.3rem] ${className}`}>
-      <span className="font-display text-[1.4rem] font-black uppercase leading-none tracking-[-0.01em] text-ink">
+    <span className={`inline-flex items-end gap-[0.34rem] ${className}`}>
+      <span className="font-display text-[1.7rem] font-black uppercase leading-none tracking-[-0.01em] text-ink">
         Azul
       </span>
-      <span className="mb-[0.2em] h-[0.45rem] w-[0.45rem] bg-cobalt" aria-hidden />
+      <span className="mb-[0.22em] h-[0.55rem] w-[0.55rem] bg-cobalt" aria-hidden />
     </span>
   );
 }
