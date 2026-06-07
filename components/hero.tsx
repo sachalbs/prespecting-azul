@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactNode } from "react";
-import { ResearchConsole } from "./research-console";
 import {
   ArrowRight,
   SlackMark,
@@ -9,118 +8,93 @@ import {
   LinkedInMark,
 } from "./icons";
 
-// Aluminium-shape background video (plays live on Vercel / in the browser; the
-// preview sandbox can't reach this host, so the CSS brushed-metal layer shows
-// underneath instead). Swap this URL to change the clip.
-const VIDEO_SRC =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260518_003132_8b7edcb6-c64d-4a52-a9ca-879942e122ad.mp4";
-
 function d(ms: number): CSSProperties {
   return { "--d": `${ms}ms` } as CSSProperties;
 }
 
 function ChannelLogo({ icon, label }: { icon: ReactNode; label: string }) {
   return (
-    <span className="inline-flex items-center gap-2 text-white/85">
-      <span className="text-white">{icon}</span>
-      <span className="text-[0.9rem] font-medium">{label}</span>
+    <span className="inline-flex items-center gap-2 text-[0.9rem] font-medium text-ink/80">
+      <span className="text-ink">{icon}</span>
+      {label}
     </span>
   );
 }
 
 export function Hero() {
   return (
-    <section
-      id="top"
-      className="relative isolate overflow-hidden bg-ink text-white"
-    >
-      {/* brushed aluminium base + animated light sweep (also the video fallback) */}
-      <div aria-hidden className="metal-bg metal-sweep absolute inset-0" />
-      {/* the aluminium-shape video */}
-      <video
-        className="absolute inset-0 h-full w-full object-cover opacity-85"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        aria-hidden
-      >
-        <source src={VIDEO_SRC} type="video/mp4" />
-      </video>
-      {/* legibility scrim — light so the metal still reads through the blend */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-b from-ink/25 via-transparent to-ink/80"
-      />
+    <section id="top" className="relative overflow-hidden border-b border-line">
+      <div aria-hidden className="grid-paper pointer-events-none absolute inset-0" />
 
-      <div className="shell relative flex min-h-[88vh] flex-col py-7">
+      <div className="shell relative pb-16 pt-6 lg:pb-24">
         {/* system bar */}
         <div
-          className="fade-in flex items-center justify-between border-b border-white/15 py-3 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-white/70"
+          className="enter flex items-center justify-between border-b border-line py-3 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted"
           style={d(0)}
         >
           <span>
-            <span className="text-white">azul</span> // moteur de prospection
+            <span className="text-ink">azul</span> // moteur de prospection
             autonome
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             système actif
           </span>
         </div>
 
-        {/* center */}
-        <div className="flex flex-1 items-center">
-          <div className="grid w-full items-center gap-12 py-14 lg:grid-cols-[1fr_minmax(340px,420px)] lg:gap-14">
-            <div className="fade-in" style={d(140)}>
-              <h1 className="blend-text text-[clamp(2.8rem,8.6vw,7rem)]">
-                <span className="display block">Le bon message,</span>
-                <span className="display block">au bon prospect.</span>
-              </h1>
-              <p className="mt-7 max-w-md text-[1.12rem] leading-relaxed text-white/80">
-                Un moteur qui étudie chaque prospect et écrit le message qui
-                fait répondre.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-                <a href="#waitlist" className="btn">
-                  Rejoindre la liste
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-                <a
-                  href="#problem"
-                  className="font-mono text-[0.74rem] font-medium uppercase tracking-[0.14em] text-white/70 transition-colors hover:text-white"
-                >
-                  ▸ pourquoi azul
-                </a>
-              </div>
-            </div>
+        {/* headline */}
+        <h1 className="mt-10 text-[clamp(2.9rem,9vw,7.5rem)]">
+          <span className="rise-wrap">
+            <span className="rise display text-ink" style={d(120)}>
+              Le bon message,
+            </span>
+          </span>
+          <span className="rise-wrap">
+            <span className="rise display text-cobalt" style={d(240)}>
+              au bon prospect.
+            </span>
+          </span>
+        </h1>
 
-            <div className="fade-in" style={d(380)}>
-              <ResearchConsole />
+        <div className="mt-10 border-t border-line" />
+
+        {/* copy + logos */}
+        <div className="grid gap-10 pt-10 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-16">
+          <div className="enter" style={d(420)}>
+            <p className="max-w-md text-[1.15rem] leading-relaxed text-muted">
+              Un moteur qui étudie chaque prospect et écrit le message qui fait
+              répondre.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <a href="#waitlist" className="btn">
+                Rejoindre la liste
+                <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href="#problem"
+                className="font-mono text-[0.74rem] font-medium uppercase tracking-[0.14em] text-muted transition-colors hover:text-ink"
+              >
+                ▸ pourquoi azul
+              </a>
             </div>
           </div>
-        </div>
 
-        {/* the right logos */}
-        <div
-          className="fade-in flex flex-col gap-4 border-t border-white/15 pt-6 sm:flex-row sm:items-center sm:justify-between"
-          style={d(520)}
-        >
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <span className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-white/55">
-              Piloté depuis
-            </span>
-            <ChannelLogo icon={<SlackMark className="h-[1.15rem] w-[1.15rem]" />} label="Slack" />
-            <ChannelLogo icon={<WhatsAppMark className="h-[1.15rem] w-[1.15rem]" />} label="WhatsApp" />
-            <ChannelLogo icon={<TeamsMark className="h-[1.15rem] w-[1.15rem]" />} label="Teams" />
-          </div>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <span className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-white/55">
-              Prospecte via
-            </span>
-            <ChannelLogo icon={<MailMark className="h-[1.15rem] w-[1.15rem]" />} label="Email" />
-            <ChannelLogo icon={<LinkedInMark className="h-[1.15rem] w-[1.15rem]" />} label="LinkedIn" />
+          <div className="enter flex flex-col gap-3" style={d(520)}>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <span className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted">
+                Piloté depuis
+              </span>
+              <ChannelLogo icon={<SlackMark className="h-[1.15rem] w-[1.15rem]" />} label="Slack" />
+              <ChannelLogo icon={<WhatsAppMark className="h-[1.15rem] w-[1.15rem]" />} label="WhatsApp" />
+              <ChannelLogo icon={<TeamsMark className="h-[1.15rem] w-[1.15rem]" />} label="Teams" />
+            </div>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <span className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted">
+                Prospecte via
+              </span>
+              <ChannelLogo icon={<MailMark className="h-[1.15rem] w-[1.15rem]" />} label="Email" />
+              <ChannelLogo icon={<LinkedInMark className="h-[1.15rem] w-[1.15rem]" />} label="LinkedIn" />
+            </div>
           </div>
         </div>
       </div>
