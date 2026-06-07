@@ -1,0 +1,36 @@
+import { WaitlistForm } from "./waitlist-form";
+import { Reveal } from "./reveal";
+
+export function Waitlist() {
+  return (
+    <section id="waitlist" className="shell py-20 sm:py-28">
+      <Reveal>
+        <div className="grid gap-10 border border-ink bg-panel p-7 sm:p-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16">
+          {/* copy */}
+          <div>
+            <span className="label">
+              <span className="sq" />
+              Accès anticipé
+            </span>
+            <h2 className="mt-5 display text-[clamp(2rem,5vw,3.4rem)] text-ink">
+              Rejoignez la liste d’attente.
+            </h2>
+            <p className="mt-5 max-w-lg text-[1.05rem] leading-relaxed text-muted">
+              Azul est en accès anticipé. Pas encore de clients publics, pas de
+              chiffres à brandir — on construit avec les premières équipes. Si
+              l’outbound de qualité vous parle, prenez votre place.
+            </p>
+          </div>
+
+          {/* form */}
+          <div>
+            <WaitlistForm />
+            <p className="text-[0.83rem] text-muted">
+              On onboarde par petites vagues, dans l’ordre d’inscription.
+            </p>
+          </div>
+        </div>
+      </Reveal>
+    </section>
+  );
+}
