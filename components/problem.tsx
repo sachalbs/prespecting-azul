@@ -17,8 +17,7 @@ export function Problem() {
           <span className="text-cobalt">01</span> / Le problème
         </span>
         <h2 className="mt-5 text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
-          L’outbound n’est pas saturé d’outils. Il est saturé de messages
-          génériques.
+          Vos prospects sont saturés de messages génériques.
         </h2>
         <p className="mt-5 max-w-2xl text-[1.08rem] leading-relaxed text-muted">
           La première vague de « SDR IA » a optimisé le volume. Azul prend le
