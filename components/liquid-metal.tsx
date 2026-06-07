@@ -16,11 +16,11 @@ function Blob() {
         <sphereGeometry args={[1, 192, 192]} />
         <MeshDistortMaterial
           color="#8aa9ff"
-          metalness={0.62}
-          roughness={0.22}
-          envMapIntensity={2.7}
-          distort={0.3}
-          speed={1.7}
+          metalness={0.72}
+          roughness={0.1}
+          envMapIntensity={2.9}
+          distort={0.28}
+          speed={1.6}
         />
       </mesh>
     </Float>

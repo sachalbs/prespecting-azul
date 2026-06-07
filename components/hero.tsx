@@ -8,7 +8,7 @@ import {
   WideArrow,
 } from "./icons";
 import LiquidMetal from "./liquid-metal";
-import { BackgroundRipple } from "./background-ripple";
+import BackgroundRippleEffect from "./background-ripple-effect";
 
 function d(ms: number): CSSProperties {
   return { "--d": `${ms}ms` } as CSSProperties;
@@ -26,7 +26,7 @@ function ChannelLogo({ icon, label }: { icon: ReactNode; label: string }) {
 function LiquidBlob() {
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[360px]">
-      <div aria-hidden className="absolute inset-8 rounded-full bg-cobalt/25 blur-3xl" />
+      <div aria-hidden className="absolute inset-12 rounded-full bg-cobalt/15 blur-2xl" />
       <LiquidMetal />
     </div>
   );
@@ -35,7 +35,9 @@ function LiquidBlob() {
 export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden border-b border-line">
-      <BackgroundRipple />
+      <div aria-hidden className="absolute inset-0">
+        <BackgroundRippleEffect rows={14} cols={30} />
+      </div>
 
       {/* content sits above the ripple; pointer-events pass through to the grid,
           except on the interactive elements (re-enabled below) */}
