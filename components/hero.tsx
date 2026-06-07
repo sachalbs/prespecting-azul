@@ -35,13 +35,13 @@ function LiquidBlob() {
 export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden border-b border-line">
-      <div aria-hidden className="absolute inset-0">
+      <div aria-hidden className="absolute inset-0 z-0">
         <BackgroundRippleEffect rows={14} cols={30} />
       </div>
 
-      {/* content sits above the ripple; pointer-events pass through to the grid,
-          except on the interactive elements (re-enabled below) */}
-      <div className="shell pointer-events-none relative pb-14 pt-6 lg:pb-20">
+      {/* content sits above the ripple (z-10); pointer-events pass through to the
+          grid, except on the interactive elements (re-enabled below) */}
+      <div className="shell pointer-events-none relative z-10 pb-14 pt-6 lg:pb-20">
         {/* system bar */}
         <div
           className="enter flex items-center justify-between border-b border-line py-3 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted"
