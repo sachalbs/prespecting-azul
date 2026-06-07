@@ -7,6 +7,7 @@ import {
   MailMark,
   LinkedInMark,
 } from "./icons";
+import LiquidMetal from "./liquid-metal";
 
 function d(ms: number): CSSProperties {
   return { "--d": `${ms}ms` } as CSSProperties;
@@ -25,7 +26,7 @@ function LiquidBlob() {
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[360px]">
       <div aria-hidden className="absolute inset-8 rounded-full bg-cobalt/25 blur-3xl" />
-      <div aria-hidden className="liquid-blob is-bluechrome absolute inset-0" />
+      <LiquidMetal />
     </div>
   );
 }
