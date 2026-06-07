@@ -39,5 +39,20 @@ else
   claude plugin install impeccable@impeccable 1>&2 || log "WARN: plugin install failed"
 fi
 
+# 3) Ensure the official Claude marketplace + Vercel plugin are present.
+if claude plugin marketplace list 2>/dev/null | grep -qi "claude-plugins-official"; then
+  log "official marketplace already registered"
+else
+  log "adding official Claude marketplace..."
+  claude plugin marketplace add anthropics/claude-plugins-official 1>&2 || log "WARN: marketplace add failed"
+fi
+
+if claude plugin list 2>/dev/null | grep -qi "vercel@claude-plugins-official"; then
+  log "vercel plugin already installed"
+else
+  log "installing vercel@claude-plugins-official..."
+  claude plugin install vercel@claude-plugins-official 1>&2 || log "WARN: plugin install failed"
+fi
+
 log "done"
 exit 0
