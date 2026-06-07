@@ -1,70 +1,92 @@
-import { WaitlistForm } from "./waitlist-form";
-import { Reveal } from "./reveal";
+import { ResearchConsole } from "./research-console";
+import { ArrowRight } from "./icons";
+import type { CSSProperties } from "react";
+
+function d(ms: number): CSSProperties {
+  return { "--d": `${ms}ms` } as CSSProperties;
+}
 
 export function Hero() {
   return (
-    <section id="top" className="relative">
-      <div className="shell pb-12 pt-14 sm:pt-20 lg:pb-16">
-        {/* top meta */}
-        <Reveal>
-          <div className="flex items-center justify-between gap-4">
-            <span className="label">
-              <span className="sq" />
-              Commercial autonome · SDR IA
-            </span>
-            <span className="hidden text-[0.72rem] font-semibold uppercase tracking-label text-muted/70 sm:block">
-              Accès anticipé
-            </span>
-          </div>
-        </Reveal>
+    <section id="top" className="relative overflow-hidden border-b border-line">
+      <div aria-hidden className="grid-paper pointer-events-none absolute inset-0" />
 
-        {/* headline */}
-        <Reveal delay={60}>
-          <h1 className="display mt-7 text-[clamp(2.9rem,9vw,7.5rem)] text-ink">
-            Le bon message,
-            <br />
-            <span className="text-cobalt">au bon prospect.</span>
-          </h1>
-        </Reveal>
-
-        <div className="mt-10 border-t border-line" />
-
-        {/* copy + form */}
-        <div className="grid items-start gap-10 pt-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
-          <Reveal delay={100}>
-            <p className="max-w-md text-[1.15rem] leading-relaxed text-muted">
-              Azul recherche chaque prospect et lui écrit un message{" "}
-              <strong className="font-semibold text-ink">
-                vraiment personnel
-              </strong>
-              . Résultat : beaucoup plus de{" "}
-              <strong className="font-semibold text-ink">réponses</strong>.
-            </p>
-          </Reveal>
-
-          <Reveal delay={150}>
-            <div>
-              <WaitlistForm />
-              <p className="text-[0.83rem] text-muted">
-                Accès anticipé, par petites vagues. Pas de carte bancaire.
-                Désinscription en un clic.
-              </p>
-            </div>
-          </Reveal>
+      <div className="shell relative pb-14 pt-6 lg:pb-20">
+        {/* system bar */}
+        <div
+          className="enter flex items-center justify-between border-b border-line py-3 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted"
+          style={d(0)}
+        >
+          <span>
+            <span className="text-ink">azul</span> // moteur de prospection
+            autonome
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            système actif
+          </span>
         </div>
 
-        {/* bottom meta strip */}
-        <Reveal delay={120}>
-          <div className="mt-12 flex flex-col gap-3 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-[0.72rem] font-semibold uppercase tracking-label text-muted">
-              <span className="text-ink">Piloté depuis</span>{" "}
-              — Slack · WhatsApp · Teams
-            </span>
-            <span className="text-[0.72rem] font-semibold uppercase tracking-label text-muted">
-              <span className="text-ink">Prospecte via</span> — Email · LinkedIn
-            </span>
+        {/* main */}
+        <div className="grid items-center gap-12 pt-12 lg:grid-cols-[1fr_minmax(360px,440px)] lg:gap-14 lg:pt-16">
+          <div>
+            <h1 className="text-[clamp(2.8rem,8.6vw,7rem)]">
+              <span className="rise-wrap">
+                <span className="rise display text-ink" style={d(120)}>
+                  Le bon message,
+                </span>
+              </span>
+              <span className="rise-wrap">
+                <span className="rise display text-cobalt" style={d(240)}>
+                  au bon prospect.
+                </span>
+              </span>
+            </h1>
+
+            <p
+              className="enter mt-7 max-w-md text-[1.12rem] leading-relaxed text-muted"
+              style={d(440)}
+            >
+              Un moteur qui étudie chaque prospect et écrit le message qui fait
+              répondre.
+            </p>
+
+            <div
+              className="enter mt-8 flex flex-wrap items-center gap-x-6 gap-y-3"
+              style={d(560)}
+            >
+              <a href="#waitlist" className="btn">
+                Rejoindre la liste
+                <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href="#how"
+                className="font-mono text-[0.74rem] font-medium uppercase tracking-[0.14em] text-muted transition-colors hover:text-ink"
+              >
+                ▸ voir comment ça marche
+              </a>
+            </div>
           </div>
-        </Reveal>
+
+          {/* the engine */}
+          <div className="enter" style={d(500)}>
+            <ResearchConsole />
+          </div>
+        </div>
+
+        {/* meta strip */}
+        <div
+          className="enter mt-14 flex flex-col gap-3 border-t border-line pt-6 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted sm:flex-row sm:items-center sm:justify-between"
+          style={d(680)}
+        >
+          <span>
+            <span className="text-ink">piloté depuis</span> — slack · whatsapp ·
+            teams
+          </span>
+          <span>
+            <span className="text-ink">prospecte via</span> — email · linkedin
+          </span>
+        </div>
       </div>
     </section>
   );

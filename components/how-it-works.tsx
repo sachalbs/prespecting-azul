@@ -27,8 +27,7 @@ export function HowItWorks() {
     <section id="how" className="shell py-20 sm:py-28">
       <Reveal className="max-w-3xl">
         <span className="label">
-          <span className="sq" />
-          Comment ça marche
+          <span className="text-cobalt">03</span> / Le process
         </span>
         <h2 className="mt-5 text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
           De la recherche à la réponse, en trois temps.

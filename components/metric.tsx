@@ -6,9 +6,8 @@ export function Metric() {
       <div aria-hidden className="blueprint pointer-events-none absolute inset-0 opacity-60" />
       <div className="shell relative py-20 sm:py-28">
         <Reveal className="max-w-4xl">
-          <span className="label !text-white/70">
-            <span className="h-2 w-2 bg-white" />
-            La seule métrique qui compte
+          <span className="label !text-white/80">
+            <span className="text-white">04</span> / La seule métrique qui compte
           </span>
           <p className="mt-6 text-[clamp(2.1rem,5.4vw,3.8rem)] font-display font-black uppercase leading-[0.98] tracking-[-0.02em] text-white">
             Le taux de réponse.

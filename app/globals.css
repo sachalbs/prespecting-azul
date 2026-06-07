@@ -33,22 +33,19 @@
     @apply mx-auto w-full max-w-content px-5 sm:px-8 lg:px-12;
   }
 
-  /* Massive Swiss display type — uppercase, ultra-bold, tight. */
   .display {
     @apply font-display font-black uppercase leading-[0.92] tracking-[-0.02em];
   }
 
-  /* Tracked uppercase micro-label. */
+  /* Technical, monospace micro-label — the spec-sheet voice. */
   .label {
-    @apply inline-flex items-center gap-2.5 font-sans text-[0.72rem] font-semibold uppercase tracking-label text-muted;
+    @apply inline-flex items-center gap-2.5 font-mono text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted;
   }
 
-  /* The Azul/ELYS-style square bullet. */
   .sq {
     @apply inline-block h-2 w-2 shrink-0 bg-cobalt;
   }
 
-  /* Hard-edged buttons. */
   .btn {
     @apply inline-flex items-center justify-center gap-2 bg-cobalt px-6 py-3.5 text-[0.95rem] font-semibold text-white transition-colors duration-150 hover:bg-cobalt-700 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60;
   }
@@ -63,6 +60,7 @@
 }
 
 @layer utilities {
+  /* Scroll reveal (sections below the fold). */
   .reveal {
     opacity: 0;
     transform: translateY(14px);
@@ -72,18 +70,76 @@
     transition-delay: var(--reveal-delay, 0ms);
     will-change: opacity, transform;
   }
-
   .reveal.is-visible {
     opacity: 1;
     transform: none;
   }
 
-  /* Engineering grid texture for dark/cobalt blocks. */
+  /* Clip-reveal: a line rises from behind a mask. */
+  .rise-wrap {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.06em;
+  }
+  .rise {
+    display: block;
+    transform: translateY(110%);
+    animation: rise 0.78s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--d, 0ms);
+  }
+
+  /* Choreographed on-load entrance. */
+  .enter {
+    opacity: 0;
+    animation: enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--d, 0ms);
+  }
+
+  /* Console step tick-in. */
+  .term-step {
+    opacity: 0;
+    animation: stepin 0.4s ease-out both;
+    animation-delay: var(--d, 0ms);
+  }
+
   .blueprint {
     background-image:
       linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
     background-size: 56px 56px;
+  }
+  /* Light-mode engineering grid. */
+  .grid-paper {
+    background-image:
+      linear-gradient(to right, rgba(17, 17, 20, 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(17, 17, 20, 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+}
+
+@keyframes rise {
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes stepin {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -91,9 +147,13 @@
   html {
     scroll-behavior: auto;
   }
-  .reveal {
+  .reveal,
+  .rise,
+  .enter,
+  .term-step {
     opacity: 1 !important;
     transform: none !important;
+    animation: none !important;
     transition: none !important;
   }
   *,

@@ -14,8 +14,7 @@ export function Problem() {
     <section className="shell py-20 sm:py-28">
       <Reveal className="max-w-3xl">
         <span className="label">
-          <span className="sq" />
-          Le problème
+          <span className="text-cobalt">01</span> / Le problème
         </span>
         <h2 className="mt-5 text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
           L’outbound n’est pas saturé d’outils. Il est saturé de messages

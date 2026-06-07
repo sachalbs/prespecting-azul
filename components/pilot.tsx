@@ -30,8 +30,7 @@ export function Pilot() {
           <div className="max-w-xl">
             <Reveal>
               <span className="label !text-cobalt-300">
-                <span className="sq" />
-                Le cœur du produit
+                <span className="text-white">02</span> / Le pilotage
               </span>
               <h2 className="mt-5 text-[clamp(1.9rem,4.2vw,2.9rem)] font-display font-black leading-[1.04] tracking-[-0.015em] text-white">
                 Vous le managez comme un employé. Depuis vos propres outils.
