@@ -1,0 +1,72 @@
+[project]
+name = "azul-agent"
+version = "0.0.1"
+description = "Azul — autonomous deep-research SDR agent (Jalon 0 thin slice)"
+requires-python = ">=3.11"
+readme = "README.md"
+dependencies = [
+    # Orchestration — we own the loop, expressed as a LangGraph StateGraph
+    "langgraph>=0.2.40",
+    # Data layer — typed ORM + migrations + vectors (pgvector in prod)
+    "sqlalchemy>=2.0.30",
+    "alembic>=1.13",
+    "pgvector>=0.3.0",
+    "psycopg[binary]>=3.2",
+    # HTTP + resilience for external commodity engines
+    "httpx>=0.27",
+    "tenacity>=9.0",
+    # Config / secrets (env-only) + typed models
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    # CLI + structured logging (the flywheel depends on the logs)
+    "typer>=0.12",
+    "structlog>=24.4",
+    # Reply webhook receiver (Unipile -> outcomes)
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+]
+
+[project.scripts]
+azul = "azul.cli.main:app"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "respx>=0.21",
+    "ruff>=0.6",
+    "pyright>=1.1.380",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/azul"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+# B008: Typer/FastAPI rely on function calls (Option/Header) in argument defaults.
+ignore = ["B008"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false
+# Third-party libs (LangGraph overloads, SQLAlchemy dynamics) surface as "Unknown"
+# under strict — that's library typing, not our code. Everything we write is typed.
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+
+[tool.pytest.ini_options]
+addopts = "-q"
+asyncio_mode = "auto"
+testpaths = ["tests"]

@@ -1,0 +1,35 @@
+"""`Writer` — the one call where we pay for quality. Swappable text model behind it."""
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import ClassVar
+
+from azul.domain import ProspectBrief
+
+
+@dataclass
+class DraftRequest:
+    prospect: ProspectBrief
+    hook: str | None
+    channel: str = "email"
+    sender_name: str | None = None
+    # One line on who we are / what we offer — kept short on purpose.
+    value_prop: str | None = None
+
+
+@dataclass
+class Draft:
+    body: str
+    subject: str | None = None
+    angle: str | None = None
+
+
+class Writer(ABC):
+    name: ClassVar[str]
+
+    @abstractmethod
+    def write(self, request: DraftRequest) -> Draft:
+        """Produce one hyper-personalised message. No templates, no slop."""
+        raise NotImplementedError
