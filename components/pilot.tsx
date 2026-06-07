@@ -37,9 +37,8 @@ export function Pilot() {
                 Vous le managez comme un employé. Depuis vos propres outils.
               </h2>
               <p className="mt-5 text-[1.05rem] leading-relaxed text-white/60">
-                Aucun tableau de bord, aucune application à apprendre. Azul vit
-                là où votre équipe travaille déjà — Slack, WhatsApp, Teams — et
-                prospecte par email et LinkedIn.
+                Aucun tableau de bord, aucune appli à apprendre. Il vit dans
+                Slack, WhatsApp ou Teams, et prospecte par email et LinkedIn.
               </p>
             </Reveal>
 

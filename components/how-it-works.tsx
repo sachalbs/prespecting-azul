@@ -6,19 +6,19 @@ const steps = [
     n: "01",
     icon: <Search className="h-5 w-5" />,
     title: "Recherche",
-    desc: "Azul mène une vraie enquête sur chaque prospect : levées, recrutements, stack, signaux d’intérêt. Du contexte réel, pas une variable {{prénom}}.",
+    desc: "Levées, recrutements, stack, signaux d’intérêt. Du contexte réel, pas une variable {{prénom}}.",
   },
   {
     n: "02",
     icon: <Pen className="h-5 w-5" />,
     title: "Rédaction",
-    desc: "Il en tire un message personnel et référencé, calé sur votre offre et votre ton. Concis, crédible, jamais robot.",
+    desc: "Un message personnel et référencé, calé sur votre offre et votre ton. Jamais robot.",
   },
   {
     n: "03",
     icon: <Loop className="h-5 w-5" />,
     title: "Envoi & apprentissage",
-    desc: "Vous validez les premiers, il calibre le reste, envoie, mesure les réponses et s’améliore campagne après campagne.",
+    desc: "Vous validez les premiers, il calibre le reste, envoie et s’améliore campagne après campagne.",
   },
 ];
 

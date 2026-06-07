@@ -20,11 +20,10 @@ export function Hero() {
 
         {/* headline */}
         <Reveal delay={60}>
-          <h1 className="display mt-7 text-[clamp(2.7rem,8.6vw,7rem)] text-ink">
-            Moins de messages.
+          <h1 className="display mt-7 text-[clamp(2.9rem,9vw,7.5rem)] text-ink">
+            Le bon message,
             <br />
-            Beaucoup plus de{" "}
-            <span className="text-cobalt">réponses.</span>
+            <span className="text-cobalt">au bon prospect.</span>
           </h1>
         </Reveal>
 
@@ -33,17 +32,13 @@ export function Hero() {
         {/* copy + form */}
         <div className="grid items-start gap-10 pt-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
           <Reveal delay={100}>
-            <p className="max-w-xl text-[1.15rem] leading-relaxed text-muted">
-              Azul est un commercial autonome. Il étudie chaque prospect en
-              profondeur, lui écrit un message{" "}
+            <p className="max-w-md text-[1.15rem] leading-relaxed text-muted">
+              Azul recherche chaque prospect et lui écrit un message{" "}
               <strong className="font-semibold text-ink">
                 vraiment personnel
-              </strong>{" "}
-              — jamais robot — et fait grimper votre{" "}
-              <strong className="font-semibold text-ink">
-                taux de réponse
               </strong>
-              .
+              . Résultat : beaucoup plus de{" "}
+              <strong className="font-semibold text-ink">réponses</strong>.
             </p>
           </Reveal>
 

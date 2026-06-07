@@ -16,9 +16,8 @@ export function Waitlist() {
               Rejoignez la liste d’attente.
             </h2>
             <p className="mt-5 max-w-lg text-[1.05rem] leading-relaxed text-muted">
-              Azul est en accès anticipé. Pas encore de clients publics, pas de
-              chiffres à brandir — on construit avec les premières équipes. Si
-              l’outbound de qualité vous parle, prenez votre place.
+              Accès anticipé. Pas de clients publics ni de chiffres à brandir :
+              on construit avec les premières équipes.
             </p>
           </div>
 

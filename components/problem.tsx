@@ -22,9 +22,8 @@ export function Problem() {
           génériques.
         </h2>
         <p className="mt-5 max-w-2xl text-[1.08rem] leading-relaxed text-muted">
-          La première vague de « SDR IA » a optimisé le volume : prospects
-          grillés, réputation d’envoi abîmée, taux de réponse en chute. Azul
-          prend le problème à l’envers.
+          La première vague de « SDR IA » a optimisé le volume. Azul prend le
+          problème à l’envers.
         </p>
       </Reveal>
 

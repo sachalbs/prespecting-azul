@@ -17,10 +17,8 @@ export function Metric() {
           </p>
           <div className="mt-9 max-w-xl border-t border-white/25 pt-6">
             <p className="text-[1.05rem] leading-relaxed text-white/80">
-              Tout le produit est construit autour d’une seule question :
-              est-ce que vos prospects répondent ? Le volume, les cadences, les
-              « séquences » ne sont que des moyens. Azul optimise la fin, pas le
-              bruit.
+              Une seule question : est-ce que vos prospects répondent ? Tout le
+              produit est construit autour de ça. Pas du bruit.
             </p>
           </div>
         </Reveal>
