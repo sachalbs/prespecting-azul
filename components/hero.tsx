@@ -26,7 +26,6 @@ function ChannelLogo({ icon, label }: { icon: ReactNode; label: string }) {
 function LiquidBlob() {
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[360px]">
-      <div aria-hidden className="absolute inset-12 rounded-full bg-cobalt/15 blur-2xl" />
       <LiquidMetal />
     </div>
   );

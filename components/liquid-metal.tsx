@@ -16,11 +16,11 @@ function Blob() {
         <sphereGeometry args={[1, 192, 192]} />
         <MeshDistortMaterial
           color="#8aa9ff"
-          metalness={0.72}
-          roughness={0.1}
-          envMapIntensity={2.9}
-          distort={0.28}
-          speed={1.6}
+          metalness={0.78}
+          roughness={0.04}
+          envMapIntensity={3.1}
+          distort={0.2}
+          speed={1.5}
         />
       </mesh>
     </Float>
@@ -48,7 +48,7 @@ export default function LiquidMetal() {
     >
       <ambientLight intensity={1.15} />
       <Blob />
-      <Environment resolution={256}>
+      <Environment resolution={512}>
         {/* big blue fill — floods the metal with bright blue */}
         <Lightformer
           form="rect"
