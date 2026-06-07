@@ -1,5 +1,5 @@
 import { Wordmark } from "./wordmark";
-import { ArrowRight } from "./icons";
+import { WideArrow } from "./icons";
 
 export function SiteHeader() {
   return (
@@ -12,7 +12,7 @@ export function SiteHeader() {
         <nav className="flex items-center">
           <a href="#waitlist" className="btn px-5 py-2.5 text-[0.85rem]">
             Rejoindre la liste
-            <ArrowRight className="h-3.5 w-3.5" />
+            <WideArrow className="h-2.5 w-6" />
           </a>
         </nav>
       </div>

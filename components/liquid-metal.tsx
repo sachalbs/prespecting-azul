@@ -11,16 +11,16 @@ import {
 
 function Blob() {
   return (
-    <Float speed={1.1} rotationIntensity={0.4} floatIntensity={0.9}>
+    <Float speed={1.5} rotationIntensity={0.65} floatIntensity={1.4}>
       <mesh>
         <sphereGeometry args={[1, 192, 192]} />
         <MeshDistortMaterial
-          color="#6e96ff"
-          metalness={0.7}
-          roughness={0.2}
-          envMapIntensity={2.6}
-          distort={0.2}
-          speed={1.1}
+          color="#8aa9ff"
+          metalness={0.62}
+          roughness={0.22}
+          envMapIntensity={2.7}
+          distort={0.3}
+          speed={1.7}
         />
       </mesh>
     </Float>
@@ -46,16 +46,16 @@ export default function LiquidMetal() {
       gl={{ antialias: true, alpha: true }}
       aria-hidden
     >
-      <ambientLight intensity={1} />
+      <ambientLight intensity={1.15} />
       <Blob />
       <Environment resolution={256}>
         {/* big blue fill — floods the metal with bright blue */}
         <Lightformer
           form="rect"
-          intensity={3}
+          intensity={3.3}
           position={[0, 0, -6]}
           scale={[16, 16, 1]}
-          color="#d4e3ff"
+          color="#e2ecff"
         />
         {/* white key — the glossy highlight */}
         <Lightformer

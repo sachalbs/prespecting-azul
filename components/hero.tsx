@@ -1,13 +1,14 @@
 import type { CSSProperties, ReactNode } from "react";
 import {
-  ArrowRight,
   SlackMark,
   WhatsAppMark,
   TeamsMark,
   MailMark,
   LinkedInMark,
+  WideArrow,
 } from "./icons";
 import LiquidMetal from "./liquid-metal";
+import { BackgroundRipple } from "./background-ripple";
 
 function d(ms: number): CSSProperties {
   return { "--d": `${ms}ms` } as CSSProperties;
@@ -34,9 +35,11 @@ function LiquidBlob() {
 export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden border-b border-line">
-      <div aria-hidden className="grid-paper pointer-events-none absolute inset-0" />
+      <BackgroundRipple />
 
-      <div className="shell relative pb-14 pt-6 lg:pb-20">
+      {/* content sits above the ripple; pointer-events pass through to the grid,
+          except on the interactive elements (re-enabled below) */}
+      <div className="shell pointer-events-none relative pb-14 pt-6 lg:pb-20">
         {/* system bar */}
         <div
           className="enter flex items-center justify-between border-b border-line py-3 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted"
@@ -52,7 +55,7 @@ export function Hero() {
           </span>
         </div>
 
-        {/* headline (smaller) + blue bubble */}
+        {/* headline + blob */}
         <div className="grid items-center gap-10 pt-12 lg:grid-cols-[1.05fr_minmax(300px,380px)] lg:gap-14 lg:pt-16">
           <div>
             <h1 className="text-[clamp(2.3rem,5.4vw,4.4rem)]">
@@ -77,29 +80,38 @@ export function Hero() {
             </p>
 
             <div
-              className="enter mt-7 flex flex-wrap items-center gap-x-6 gap-y-3"
+              className="enter mt-8 flex flex-wrap items-center gap-x-7 gap-y-4"
               style={d(520)}
             >
-              <a href="#waitlist" className="btn">
+              <a href="#waitlist" className="btn pointer-events-auto">
                 Rejoindre la liste
-                <ArrowRight className="h-4 w-4" />
+                <WideArrow className="h-3 w-7" />
               </a>
               <a
                 href="#problem"
-                className="font-mono text-[0.74rem] font-medium uppercase tracking-[0.14em] text-muted transition-colors hover:text-ink"
+                className="group pointer-events-auto inline-flex items-center gap-2.5 text-[0.95rem] font-semibold text-ink transition-colors hover:text-cobalt"
               >
-                ▸ pourquoi azul
+                Pourquoi Azul
+                <WideArrow className="h-3 w-6 transition-transform duration-200 group-hover:translate-x-1.5" />
               </a>
             </div>
           </div>
 
-          <div className="enter" style={d(440)}>
+          <a
+            href="#waitlist"
+            aria-label="Rejoindre la liste d’attente"
+            className="enter pointer-events-auto block cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
+            style={d(440)}
+          >
             <LiquidBlob />
-          </div>
+          </a>
         </div>
 
         {/* channel logos */}
-        <div className="enter mt-12 flex flex-col gap-4 border-t border-line pt-7 sm:flex-row sm:items-center sm:justify-between" style={d(620)}>
+        <div
+          className="enter mt-12 flex flex-col gap-4 border-t border-line pt-7 sm:flex-row sm:items-center sm:justify-between"
+          style={d(620)}
+        >
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5">
             <span className="font-mono text-[0.8rem] uppercase tracking-[0.14em] text-muted">
               Piloté depuis

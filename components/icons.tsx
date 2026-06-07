@@ -23,6 +23,24 @@ export function ArrowRight(props: IconProps) {
   );
 }
 
+export function WideArrow(props: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 30 12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      {...props}
+    >
+      <path d="M1 6h27" />
+      <path d="m23 1.5 5 4.5-5 4.5" />
+    </svg>
+  );
+}
+
 export function Check(props: IconProps) {
   return (
     <svg {...base} {...props}>
@@ -99,11 +117,15 @@ export function Cross(props: IconProps) {
 
 export function SlackMark(props: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-      <path d="M6 14.5a2 2 0 1 1-2-2h2v2Zm1 0a2 2 0 1 1 4 0v5a2 2 0 1 1-4 0v-5Z" />
-      <path d="M9.5 6a2 2 0 1 1 2-2v2h-2Zm0 1a2 2 0 1 1 0 4h-5a2 2 0 1 1 0-4h5Z" />
-      <path d="M18 9.5a2 2 0 1 1 2 2h-2v-2Zm-1 0a2 2 0 1 1-4 0v-5a2 2 0 1 1 4 0v5Z" />
-      <path d="M14.5 18a2 2 0 1 1-2 2v-2h2Zm0-1a2 2 0 1 1 0-4h5a2 2 0 1 1 0 4h-5Z" />
+    <svg viewBox="0 0 122.8 122.8" aria-hidden {...props}>
+      <path d="M25.8 77.6a12.9 12.9 0 1 1-12.9-12.9h12.9v12.9z" fill="#E01E5A" />
+      <path d="M32.3 77.6a12.9 12.9 0 0 1 25.8 0v32.3a12.9 12.9 0 0 1-25.8 0V77.6z" fill="#E01E5A" />
+      <path d="M45.2 25.8a12.9 12.9 0 1 1 12.9-12.9v12.9H45.2z" fill="#36C5F0" />
+      <path d="M45.2 32.3a12.9 12.9 0 0 1 0 25.8H12.9a12.9 12.9 0 0 1 0-25.8h32.3z" fill="#36C5F0" />
+      <path d="M97 45.2a12.9 12.9 0 1 1 12.9 12.9H97V45.2z" fill="#2EB67D" />
+      <path d="M90.5 45.2a12.9 12.9 0 0 1-25.8 0V12.9a12.9 12.9 0 0 1 25.8 0v32.3z" fill="#2EB67D" />
+      <path d="M77.6 97a12.9 12.9 0 1 1-12.9 12.9V97h12.9z" fill="#ECB22E" />
+      <path d="M77.6 90.5a12.9 12.9 0 0 1 0-25.8h32.3a12.9 12.9 0 0 1 0 25.8H77.6z" fill="#ECB22E" />
     </svg>
   );
 }
@@ -111,7 +133,7 @@ export function SlackMark(props: IconProps) {
 export function WhatsAppMark(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-      <path d="M12 2.4a9.5 9.5 0 0 0-8.1 14.4L2.4 21.6l4.9-1.4A9.5 9.5 0 1 0 12 2.4Zm0 1.8a7.7 7.7 0 0 1 6.5 11.8c-.2.3-.2.3-.4 1l.7 2.4-2.4-.7c-.5.1-.6.2-1 .3A7.7 7.7 0 1 1 12 4.2Zm-3 3.3c-.2 0-.5.1-.7.4-.3.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.6.7 3.1.7.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.4l-1.6-.8c-.2-.1-.4-.1-.6.1l-.7.9c-.1.2-.3.2-.5.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.3-1.6-1.5-1.9-.1-.2 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.8-1.9c-.2-.4-.4-.4-.6-.4Z" />
+      <path d="M12.04 2.5a9.46 9.46 0 0 0-8.1 14.3L2.5 21.5l4.84-1.42A9.46 9.46 0 1 0 12.04 2.5Zm0 1.73a7.72 7.72 0 1 1-3.93 14.37l-.28-.17-2.87.84.85-2.8-.18-.29A7.72 7.72 0 0 1 12.04 4.23ZM8.5 7.9c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.23.9 2.42 1.03 2.59.13.17 1.77 2.84 4.37 3.86 2.16.85 2.6.68 3.07.64.47-.04 1.5-.61 1.72-1.2.21-.59.21-1.1.15-1.2-.06-.1-.23-.17-.48-.3-.25-.12-1.5-.74-1.73-.82-.23-.08-.4-.13-.56.13-.17.25-.64.82-.79.99-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.66-1.25-1.48-1.4-1.73-.14-.25-.01-.39.11-.51.11-.11.25-.29.38-.43.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.56-1.37-.78-1.87-.2-.48-.41-.42-.56-.42H8.5Z" />
     </svg>
   );
 }
@@ -119,8 +141,11 @@ export function WhatsAppMark(props: IconProps) {
 export function TeamsMark(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-      <path d="M3.5 7.5h8.2v2H8.9v7h-2.4v-7H3.5v-2Z" />
-      <path d="M14.6 7.2a2 2 0 1 0 0-.1ZM13 11h7a1 1 0 0 1 1 1v3.6a3.6 3.6 0 0 1-3.6 3.6H16a3 3 0 0 1-3-3v-5.2Z" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M4.6 4.5h14.8a1.8 1.8 0 0 1 1.8 1.8v11.4a1.8 1.8 0 0 1-1.8 1.8H4.6a1.8 1.8 0 0 1-1.8-1.8V6.3a1.8 1.8 0 0 1 1.8-1.8ZM7.5 9.1v1.9h2.6v6.4h2.2v-6.4h2.6V9.1H7.5Z"
+      />
     </svg>
   );
 }
@@ -136,8 +161,12 @@ export function MailMark(props: IconProps) {
 
 export function LinkedInMark(props: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-      <path d="M4.5 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM3 9h3v12H3V9Zm5.5 0H11v1.7h.1c.4-.7 1.4-1.7 3.1-1.7 3.3 0 3.9 2.1 3.9 4.9V21h-3v-5.4c0-1.3 0-3-1.9-3s-2.1 1.4-2.1 2.9V21h-3V9Z" />
+    <svg viewBox="0 0 24 24" aria-hidden {...props}>
+      <rect width="24" height="24" rx="4" fill="#0A66C2" />
+      <path
+        fill="#fff"
+        d="M8.34 18.5H5.4V9.6h2.94v8.9ZM6.87 8.34a1.71 1.71 0 1 1 0-3.42 1.71 1.71 0 0 1 0 3.42ZM18.6 18.5h-2.93v-4.33c0-1.03-.02-2.36-1.44-2.36-1.44 0-1.66 1.13-1.66 2.29v4.4h-2.93V9.6h2.81v1.22h.04c.39-.74 1.35-1.52 2.78-1.52 2.97 0 3.52 1.96 3.52 4.5v4.7Z"
+      />
     </svg>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { ArrowRight, Check } from "./icons";
+import { WideArrow, Check } from "./icons";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -91,7 +91,7 @@ export function WaitlistForm() {
           className="btn h-[3.25rem] whitespace-nowrap"
         >
           {status === "loading" ? "Un instant…" : "Rejoindre la liste"}
-          {status !== "loading" && <ArrowRight className="h-4 w-4" />}
+          {status !== "loading" && <WideArrow className="h-3 w-7" />}
         </button>
       </div>
 
