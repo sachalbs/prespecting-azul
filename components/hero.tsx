@@ -15,7 +15,7 @@ function d(ms: number): CSSProperties {
 
 function ChannelLogo({ icon, label }: { icon: ReactNode; label: string }) {
   return (
-    <span className="inline-flex items-center gap-2 text-[0.9rem] font-medium text-ink/80">
+    <span className="inline-flex items-center gap-2.5 text-[1.02rem] font-medium text-ink/80">
       <span className="text-ink">{icon}</span>
       {label}
     </span>
@@ -99,21 +99,21 @@ export function Hero() {
         </div>
 
         {/* channel logos */}
-        <div className="enter mt-12 flex flex-col gap-3 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between" style={d(620)}>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <span className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted">
+        <div className="enter mt-12 flex flex-col gap-4 border-t border-line pt-7 sm:flex-row sm:items-center sm:justify-between" style={d(620)}>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5">
+            <span className="font-mono text-[0.8rem] uppercase tracking-[0.14em] text-muted">
               Piloté depuis
             </span>
-            <ChannelLogo icon={<SlackMark className="h-[1.15rem] w-[1.15rem]" />} label="Slack" />
-            <ChannelLogo icon={<WhatsAppMark className="h-[1.15rem] w-[1.15rem]" />} label="WhatsApp" />
-            <ChannelLogo icon={<TeamsMark className="h-[1.15rem] w-[1.15rem]" />} label="Teams" />
+            <ChannelLogo icon={<SlackMark className="h-[1.35rem] w-[1.35rem]" />} label="Slack" />
+            <ChannelLogo icon={<WhatsAppMark className="h-[1.35rem] w-[1.35rem]" />} label="WhatsApp" />
+            <ChannelLogo icon={<TeamsMark className="h-[1.35rem] w-[1.35rem]" />} label="Teams" />
           </div>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <span className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5">
+            <span className="font-mono text-[0.8rem] uppercase tracking-[0.14em] text-muted">
               Prospecte via
             </span>
-            <ChannelLogo icon={<MailMark className="h-[1.15rem] w-[1.15rem]" />} label="Email" />
-            <ChannelLogo icon={<LinkedInMark className="h-[1.15rem] w-[1.15rem]" />} label="LinkedIn" />
+            <ChannelLogo icon={<MailMark className="h-[1.35rem] w-[1.35rem]" />} label="Email" />
+            <ChannelLogo icon={<LinkedInMark className="h-[1.35rem] w-[1.35rem]" />} label="LinkedIn" />
           </div>
         </div>
       </div>
