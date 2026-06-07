@@ -21,25 +21,12 @@ function ChannelLogo({ icon, label }: { icon: ReactNode; label: string }) {
   );
 }
 
-function MessageBubble() {
+function LiquidBlob() {
   return (
-    <figure className="ml-auto w-full max-w-sm">
-      <div className="rounded-[1.6rem] rounded-br-md bg-cobalt px-6 py-5 text-white shadow-[0_20px_44px_-18px_rgba(44,78,230,0.6)]">
-        <p className="font-mono text-[0.64rem] uppercase tracking-[0.16em] text-white/65">
-          Azul · écrit pour Camille Roche
-        </p>
-        <p className="mt-3 text-[0.92rem] leading-relaxed text-white/95">
-          Bonjour Camille — votre{" "}
-          <span className="font-semibold">Série A</span> et vos{" "}
-          <span className="font-semibold">4 recrutements SDR</span> pointent
-          vers la même priorité. J’ai une approche précise pour vos premières
-          séquences. Dix minutes la semaine prochaine&nbsp;?
-        </p>
-      </div>
-      <figcaption className="mt-2 text-right font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted">
-        message généré · à valider
-      </figcaption>
-    </figure>
+    <div className="relative mx-auto aspect-square w-full max-w-[360px]">
+      <div aria-hidden className="absolute inset-8 rounded-full bg-cobalt/25 blur-3xl" />
+      <div aria-hidden className="liquid-blob absolute inset-0" />
+    </div>
   );
 }
 
@@ -106,7 +93,7 @@ export function Hero() {
           </div>
 
           <div className="enter" style={d(440)}>
-            <MessageBubble />
+            <LiquidBlob />
           </div>
         </div>
 
