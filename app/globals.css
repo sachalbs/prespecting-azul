@@ -241,6 +241,32 @@
   );
   mix-blend-mode: multiply;
 }
+
+/* Variant B — brushed/chrome aluminium (the floating metal thing). */
+.liquid-blob.is-metal {
+  background:
+    radial-gradient(120% 120% at 30% 22%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 36%),
+    conic-gradient(
+      from 212deg at 50% 48%,
+      #eef2f6, #aab3bf, #474f5b, #d6dce3, #6c7682,
+      #f3f6f9, #3a424d, #b8c0ca, #5a6470, #eef2f6
+    );
+  box-shadow:
+    inset -16px -22px 48px rgba(20, 26, 38, 0.6),
+    inset 14px 18px 36px rgba(255, 255, 255, 0.5),
+    0 36px 80px -28px rgba(40, 48, 66, 0.55);
+}
+
+/* Variant C — blue chrome. */
+.liquid-blob.is-bluechrome {
+  background:
+    radial-gradient(120% 120% at 30% 22%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 34%),
+    conic-gradient(
+      from 212deg at 50% 48%,
+      #dce8ff, #5b8cff, #10246e, #a8c6ff, #16307f,
+      #eaf1ff, #0c1f6e, #6f9bff, #1b3aa8, #dce8ff
+    );
+}
 @keyframes blobMorph {
   0%, 100% { border-radius: 60% 40% 55% 45% / 55% 50% 50% 45%; }
   33% { border-radius: 52% 56% 45% 60% / 60% 46% 56% 50%; }
