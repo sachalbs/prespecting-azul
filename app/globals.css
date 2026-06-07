@@ -129,6 +129,16 @@
       linear-gradient(to bottom, rgba(17, 17, 20, 0.045) 1px, transparent 1px);
     background-size: 56px 56px;
   }
+  /* Diagonal "rejected / caution" hatching. */
+  .caution-stripes {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(17, 17, 20, 0.035) 0px,
+      rgba(17, 17, 20, 0.035) 1px,
+      transparent 1px,
+      transparent 11px
+    );
+  }
 }
 
 @keyframes rise {

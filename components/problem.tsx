@@ -29,8 +29,11 @@ export function Problem() {
       <div className="mt-12 grid items-start gap-5 lg:grid-cols-2">
         {/* the old way */}
         <Reveal>
-          <div className="flex h-full flex-col justify-center border border-ink/10 bg-ink/[0.025] p-7">
-            <span className="label text-muted/80">L’approche au volume</span>
+          <div className="caution-stripes flex h-full flex-col border border-ink/10 bg-ink/[0.02] p-7">
+            <span className="label !text-red-500/80">
+              <Cross className="h-[0.9rem] w-[0.9rem]" />
+              L’approche au volume
+            </span>
             <ul className="mt-6 space-y-4">
               {oldWay.map((item) => (
                 <li
@@ -42,6 +45,9 @@ export function Problem() {
                 </li>
               ))}
             </ul>
+            <p className="mt-auto border-t border-ink/10 pt-5 text-[0.95rem] font-semibold text-red-500/90">
+              → Résultat : vous finissez en spam.
+            </p>
           </div>
         </Reveal>
 
