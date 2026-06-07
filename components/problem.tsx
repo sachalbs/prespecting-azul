@@ -17,7 +17,8 @@ export function Problem() {
           <span className="text-cobalt">01</span> / Le problème
         </span>
         <h2 className="mt-5 text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
-          Vos prospects sont saturés de messages génériques.
+          Vos prospects sont saturés de messages{" "}
+          <span className="text-cobalt">génériques.</span>
         </h2>
         <p className="mt-5 max-w-2xl text-[1.08rem] leading-relaxed text-muted">
           La première vague de « SDR IA » a optimisé le volume. Azul prend le
@@ -28,15 +29,15 @@ export function Problem() {
       <div className="mt-12 grid items-start gap-5 lg:grid-cols-2">
         {/* the old way */}
         <Reveal>
-          <div className="border border-ink/15 bg-paper p-7">
-            <span className="label">L’approche au volume</span>
+          <div className="flex h-full flex-col justify-center border border-ink/10 bg-ink/[0.025] p-7">
+            <span className="label text-muted/80">L’approche au volume</span>
             <ul className="mt-6 space-y-4">
               {oldWay.map((item) => (
                 <li
                   key={item}
                   className="flex items-start gap-3 text-[0.98rem] text-muted"
                 >
-                  <Cross className="mt-0.5 h-[1.1rem] w-[1.1rem] shrink-0 text-muted/50" />
+                  <Cross className="mt-0.5 h-[1.1rem] w-[1.1rem] shrink-0 text-red-400/80" />
                   <span className="line-through decoration-ink/20">{item}</span>
                 </li>
               ))}

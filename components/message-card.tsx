@@ -19,7 +19,7 @@ function Ref({ children }: { children: React.ReactNode }) {
  *  user's approval (the human-in-the-loop the brief describes). */
 export function MessageCard() {
   return (
-    <figure className="border border-ink bg-panel">
+    <figure className="border-2 border-ink bg-panel shadow-[6px_6px_0_0_#2C4EE6]">
       {/* recipient */}
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
         <span className="flex h-10 w-10 items-center justify-center bg-ink font-display text-[0.85rem] font-bold text-paper">
@@ -66,7 +66,7 @@ export function MessageCard() {
       {/* draft state + destination channels */}
       <figcaption className="flex items-center justify-between border-t border-line px-5 py-3.5">
         <span className="flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-label text-muted">
-          <span className="h-2 w-2 bg-amber-500" aria-hidden />
+          <span className="h-2 w-2 bg-amber-500 animate-pulse" aria-hidden />
           Brouillon · à valider
         </span>
         <span className="flex items-center gap-2.5 text-muted/80">
