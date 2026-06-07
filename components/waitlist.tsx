@@ -9,7 +9,7 @@ export function Waitlist() {
           {/* copy */}
           <div>
             <span className="label">
-              <span className="text-cobalt">05</span> / Accès anticipé
+              <span className="text-cobalt">02</span> / Accès anticipé
             </span>
             <h2 className="mt-5 display text-[clamp(2rem,5vw,3.4rem)] text-ink">
               Rejoignez la liste d’attente.

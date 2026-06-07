@@ -9,23 +9,8 @@ export function SiteHeader() {
           <Wordmark />
         </a>
 
-        <nav className="flex items-center gap-6">
-          <a
-            href="#how"
-            className="hidden text-[0.72rem] font-semibold uppercase tracking-label text-muted transition-colors hover:text-ink md:inline-block"
-          >
-            Comment ça marche
-          </a>
-          <a
-            href="#pilot"
-            className="hidden text-[0.72rem] font-semibold uppercase tracking-label text-muted transition-colors hover:text-ink md:inline-block"
-          >
-            Le pilotage
-          </a>
-          <a
-            href="#waitlist"
-            className="btn px-5 py-2.5 text-[0.85rem]"
-          >
+        <nav className="flex items-center">
+          <a href="#waitlist" className="btn px-5 py-2.5 text-[0.85rem]">
             Rejoindre la liste
             <ArrowRight className="h-3.5 w-3.5" />
           </a>

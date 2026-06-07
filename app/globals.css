@@ -143,6 +143,58 @@
   }
 }
 
+/* Brushed-aluminium backdrop — also the fallback when the bg video is blocked. */
+.metal-bg {
+  background-color: #20242b;
+  background-image:
+    repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.045) 0px,
+      rgba(255, 255, 255, 0.045) 1px,
+      transparent 1px,
+      transparent 5px
+    ),
+    radial-gradient(120% 80% at 75% 12%, #404857 0%, transparent 55%),
+    linear-gradient(125deg, #14171c 0%, #2c313b 33%, #3b424e 50%, #23282f 72%, #131519 100%);
+}
+.metal-sweep::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(
+    115deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.14) 47%,
+    rgba(150, 180, 255, 0.12) 52%,
+    transparent 62%
+  );
+  animation: sweep 7.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sweep {
+  0% { transform: translateX(-28%); }
+  50% { transform: translateX(28%); }
+  100% { transform: translateX(-28%); }
+}
+
+/* "BlendText" — the headline inverts against whatever moves behind it. */
+.blend-text {
+  mix-blend-mode: difference;
+  color: #fff;
+}
+
+/* Transform-free fade (safe to pair with mix-blend-mode once settled). */
+.fade-in {
+  opacity: 0;
+  animation: fadein 0.7s ease both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes fadein {
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -150,11 +202,15 @@
   .reveal,
   .rise,
   .enter,
-  .term-step {
+  .term-step,
+  .fade-in {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
     transition: none !important;
+  }
+  .metal-sweep::after {
+    animation: none !important;
   }
   *,
   *::before,

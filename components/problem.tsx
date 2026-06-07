@@ -11,7 +11,7 @@ const oldWay = [
 
 export function Problem() {
   return (
-    <section className="shell py-20 sm:py-28">
+    <section id="problem" className="shell py-20 sm:py-28">
       <Reveal className="max-w-3xl">
         <span className="label">
           <span className="text-cobalt">01</span> / Le problème
