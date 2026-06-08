@@ -35,6 +35,8 @@ def configure_logging(level: str = "INFO", json: bool = False) -> None:
         wrapper_class=structlog.make_filtering_bound_logger(
             getattr(logging, level.upper(), logging.INFO)
         ),
+        # Logs go to stderr so product surfaces (e.g. `azul chat`) stay clean on stdout.
+        logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
         cache_logger_on_first_use=True,
     )
     _configured = True

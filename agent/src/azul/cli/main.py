@@ -228,5 +228,13 @@ def doctor() -> None:
     )
 
 
+@app.command("chat")
+def chat() -> None:
+    """Manage Azul like an employee, from chat (the product surface)."""
+    from azul.cli.chat import run_chat
+
+    run_chat()
+
+
 if __name__ == "__main__":
     app()

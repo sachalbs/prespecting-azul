@@ -87,7 +87,8 @@ def load_prospects_csv(path: str) -> list[CsvRow]:
                 if k
             }
             email = clean.get("email")
-            if not email:
+            # Keep a row if it has an email OR enough to find one (name + domain).
+            if not email and not (clean.get("full_name") and clean.get("company_domain")):
                 continue
             signals: dict[str, object] = {}
             if clean.get("signals"):
@@ -100,7 +101,7 @@ def load_prospects_csv(path: str) -> list[CsvRow]:
                     signals.setdefault(key, value)
             rows.append(
                 CsvRow(
-                    email=email,
+                    email=email or "",
                     full_name=clean.get("full_name") or None,
                     title=clean.get("title") or None,
                     company=clean.get("company") or None,
