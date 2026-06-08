@@ -1,15 +1,15 @@
 """Holo3 computer-use research: drive a headless browser to find real hooks.
 
-Loop: screenshot -> Holo3 returns an action (click/type/scroll/navigate) or a
-final answer -> execute in Playwright -> re-screenshot -> ... until done.
-LinkedIn is browsed via a logged-in session (LINKEDIN_STORAGE_STATE).
+Loop: screenshot -> Holo3 returns an action -> execute in Playwright -> re-screenshot
+-> ... until task_complete. LinkedIn is browsed via a logged-in session
+(LINKEDIN_STORAGE_STATE).
 
-⚠️ TODO(holo-guide): the action JSON schema, coordinate convention and final-answer
-shape below are a best-effort reconstruction of the Holo3 "agent loop guide" (which
-is bot-walled here). Reconcile `_HOLO_SYSTEM`, `_parse_action` and `_execute_action`
-with the official guide, then verify locally. Until confirmed, parsing failures
-raise loudly rather than fabricate hooks. Coordinates assumed ABSOLUTE PIXELS,
-origin top-left, on a 1280x800 viewport.
+Agent-loop contract (per the Holo3 spec): each turn Holo returns either native
+`tool_calls` or a JSON envelope {"note","thought","tool_call":{"name","arguments"}}.
+Actions: click, type, scroll, drag_and_drop, key, task_complete, screenshot_request.
+Coordinates are NORMALISED [0,1000] and remapped to the live viewport here. The
+system prompt below *defines* the schema this parser expects, so prompt and parser
+stay consistent; on any mismatch the raw message is logged for correction.
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from __future__ import annotations
 import base64
 import json
 import time
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import httpx
@@ -34,23 +35,89 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _MAX_IMAGES = 3  # image budget: keep only the most recent screenshots in context
+_COORD_SCALE = 1000.0  # Holo coordinates are normalised to [0, 1000]
 
-# Principle #0: the objective is the specific, non-obvious hook — not the generic
-# funding announcement. Keep this in sync with the playbook.
 _HOLO_SYSTEM = """\
 You are a research agent controlling a web browser to find ONE specific,
 non-obvious hook about a person for cold outreach: a recent post, an opinion they
 defend, a detail of their path — NOT a generic "congrats on the funding".
 
-Each turn you receive a screenshot. Respond with a SINGLE JSON object:
-  {"action":"navigate","url":"..."}        go to a URL
-  {"action":"click","point":[x,y]}          click at absolute pixel coords
-  {"action":"type","text":"..."}            type into the focused field
-  {"action":"scroll","direction":"down"}    scroll (up|down)
-  {"action":"wait"}                          wait for load
-  {"action":"finish","hooks":[{"text":"...","rationale":"...","source_url":"..."}]}
-Emit "finish" with 1-3 hooks as soon as you have enough. JSON only.
+Each turn you receive a screenshot. Reply with a SINGLE JSON object:
+  {"note":"...", "thought":"...", "tool_call":{"name":<action>, "arguments":{...}}}
+
+Actions and arguments (coordinates are NORMALISED integers in [0,1000], origin
+top-left):
+  click            {"x":int,"y":int}
+  type             {"text":str}                 (optionally {"x","y"} to click first)
+  scroll           {"direction":"up"|"down"}
+  key              {"key":"Enter"}
+  drag_and_drop    {"start":[x,y],"end":[x,y]}
+  screenshot_request {}                          (ask for a fresh screenshot)
+  task_complete    {"hooks":[{"text":str,"rationale":str,"source_url":str}]}
+
+Call task_complete with 1-3 hooks as soon as you have enough. JSON only.
 """
+
+
+@dataclass
+class HoloAction:
+    name: str
+    args: dict[str, Any] = field(default_factory=dict)
+    note: str | None = None
+    thought: str | None = None
+
+
+def _extract_json(text: str) -> dict[str, Any]:
+    start, end = text.find("{"), text.rfind("}")
+    if start == -1 or end == -1:
+        raise ResearchError(f"Holo returned no JSON: {text[:300]}")
+    return json.loads(text[start : end + 1])
+
+
+def parse_holo_message(message: dict[str, Any]) -> HoloAction:
+    """Normalise a Holo chat message into an HoloAction (native tool_calls or JSON)."""
+    tool_calls = message.get("tool_calls")
+    if tool_calls:
+        fn = tool_calls[0]["function"]
+        raw_args = fn.get("arguments") or {}
+        args = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+        return HoloAction(name=fn["name"], args=args or {})
+
+    content = message.get("content") or ""
+    try:
+        obj = _extract_json(content if isinstance(content, str) else json.dumps(content))
+    except json.JSONDecodeError as exc:
+        raise ResearchError(f"Holo content not valid JSON: {exc}") from exc
+
+    call = obj.get("tool_call") or obj
+    name = call.get("name") or call.get("action")
+    if not name:
+        raise ResearchError(f"Holo message missing tool_call name: {obj}")
+    args = call.get("arguments")
+    if args is None:
+        args = {k: v for k, v in call.items() if k not in ("name", "action")}
+    return HoloAction(name=name, args=args, note=obj.get("note"), thought=obj.get("thought"))
+
+
+def remap_point(args: dict[str, Any], width: int, height: int) -> tuple[float, float]:
+    """Normalised [0,1000] -> viewport pixels. Accepts x/y or coordinate/point lists."""
+    if "x" in args and "y" in args:
+        nx, ny = float(args["x"]), float(args["y"])
+    else:
+        for key in ("coordinate", "point", "position", "coord"):
+            seq = args.get(key)
+            if isinstance(seq, (list, tuple)) and len(seq) >= 2:
+                nx, ny = float(seq[0]), float(seq[1])
+                break
+        else:
+            raise ResearchError(f"Holo action has no coordinates: {args}")
+    return nx / _COORD_SCALE * width, ny / _COORD_SCALE * height
+
+
+def _pair(value: Any) -> tuple[float, float]:
+    if isinstance(value, dict):
+        return float(value["x"]), float(value["y"])
+    return float(value[0]), float(value[1])
 
 
 class Holo3ResearchEngine(ResearchEngine):
@@ -71,58 +138,76 @@ class Holo3ResearchEngine(ResearchEngine):
             timeout=timeout,
         )
 
-    # ── Holo API ────────────────────────────────────────────────────────────
     @retry(
         retry=retry_if_exception_type(httpx.TransportError),
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=16),
         reraise=True,
     )
-    def _next_action(self, messages: list[dict[str, Any]]) -> str:
+    def _next_message(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
         resp = self._client.post(
             "/chat/completions",
             json={"model": self._model, "messages": messages, "temperature": 0},
         )
         resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"]
+        return resp.json()["choices"][0]["message"]
 
     @staticmethod
-    def _parse_action(content: str) -> dict[str, Any]:
-        # TODO(holo-guide): confirm exact shape. Tolerate JSON wrapped in prose.
-        start, end = content.find("{"), content.rfind("}")
-        if start == -1 or end == -1:
-            raise ResearchError(f"Holo returned no JSON action: {content[:200]}")
-        try:
-            action = json.loads(content[start : end + 1])
-        except json.JSONDecodeError as exc:
-            raise ResearchError(f"Holo action not valid JSON: {exc}") from exc
-        if "action" not in action and "hooks" not in action:
-            raise ResearchError(f"Holo action missing 'action'/'hooks': {action}")
-        return action
+    def _viewport(page: Page) -> tuple[int, int]:
+        vp = page.viewport_size or {"width": 1280, "height": 720}
+        return vp["width"], vp["height"]
 
-    # ── browser execution ─────────────────────────────────────────────────────
+    def _execute(self, page: Page, action: HoloAction) -> None:
+        w, h = self._viewport(page)
+        name, args = action.name, action.args
+        if name in ("task_complete", "screenshot_request"):
+            return
+        if name == "click":
+            page.mouse.click(*remap_point(args, w, h))
+        elif name == "type":
+            if "x" in args and "y" in args:
+                page.mouse.click(*remap_point(args, w, h))
+            page.keyboard.type(args.get("text", ""))
+        elif name == "scroll":
+            page.mouse.wheel(0, -600 if args.get("direction") == "up" else 600)
+        elif name == "key":
+            page.keyboard.press(args.get("key") or args.get("text") or "Enter")
+        elif name == "drag_and_drop":
+            x1, y1 = _pair(args["start"])
+            x2, y2 = _pair(args["end"])
+            page.mouse.move(x1 / _COORD_SCALE * w, y1 / _COORD_SCALE * h)
+            page.mouse.down()
+            page.mouse.move(x2 / _COORD_SCALE * w, y2 / _COORD_SCALE * h)
+            page.mouse.up()
+        else:
+            raise ResearchError(f"Unknown Holo action: {name}")
+
     @staticmethod
-    def _execute_action(page: Page, action: dict[str, Any]) -> None:
-        kind = action.get("action")
-        if kind == "navigate":
-            page.goto(action["url"], wait_until="domcontentloaded")
-        elif kind == "click":
-            x, y = action["point"]
-            page.mouse.click(float(x), float(y))
-        elif kind == "type":
-            page.keyboard.type(action.get("text", ""))
-        elif kind == "scroll":
-            dy = -600 if action.get("direction") == "up" else 600
-            page.mouse.wheel(0, dy)
-        elif kind == "wait":
-            page.wait_for_timeout(1500)
-        else:  # pragma: no cover - defensive
-            raise ResearchError(f"Unknown Holo action: {kind}")
+    def hooks_from_complete(action: HoloAction) -> list[Hook]:
+        raw = action.args.get("hooks")
+        if isinstance(raw, str):
+            try:
+                raw = json.loads(raw)
+            except json.JSONDecodeError:
+                raw = None
+        if not isinstance(raw, list):
+            # Fallback: salvage a single hook from the note/thought.
+            text = action.note or action.thought
+            return [Hook(text=text, confidence=0.5)] if text else []
+        return [
+            Hook(
+                text=h.get("text", ""),
+                rationale=h.get("rationale"),
+                source_url=h.get("source_url"),
+                confidence=0.7,
+            )
+            for h in raw
+            if isinstance(h, dict) and h.get("text")
+        ]
 
     @staticmethod
     def _screenshot_message(page: Page, note: str) -> dict[str, Any]:
-        png = page.screenshot()
-        b64 = base64.b64encode(png).decode()
+        b64 = base64.b64encode(page.screenshot()).decode()
         return {
             "role": "user",
             "content": [
@@ -151,7 +236,7 @@ class Holo3ResearchEngine(ResearchEngine):
             with sync_playwright() as pw:
                 browser = pw.chromium.launch(headless=self._headless)
                 ctx = browser.new_context(
-                    storage_state=self._storage_state if self._storage_state else None,
+                    storage_state=self._storage_state if self._storage_state else None
                 )
                 page = ctx.new_page()
                 page.goto(self._start_url(prospect), wait_until="domcontentloaded")
@@ -171,33 +256,29 @@ class Holo3ResearchEngine(ResearchEngine):
                     if time.monotonic() > deadline:
                         log.warning("holo_timeout", email=prospect.email)
                         break
-                    content = self._next_action(messages)
-                    transcript.append({"assistant": content})
-                    action = self._parse_action(content)
-                    if action.get("action") == "finish" or "hooks" in action:
-                        hooks = [
-                            Hook(
-                                text=h.get("text", ""),
-                                rationale=h.get("rationale"),
-                                source_url=h.get("source_url"),
-                                confidence=0.7,
-                            )
-                            for h in action.get("hooks", [])
-                            if h.get("text")
-                        ]
+                    message = self._next_message(messages)
+                    try:
+                        action = parse_holo_message(message)
+                    except ResearchError:
+                        log.error("holo_parse_failed", email=prospect.email, raw=str(message)[:800])
+                        raise
+                    transcript.append({"action": action.name, "args": action.args})
+
+                    if action.name == "task_complete":
                         sources.append({"url": page.url})
                         browser.close()
                         return ResearchResult(
                             engine=self.name,
-                            hooks=hooks,
+                            hooks=self.hooks_from_complete(action),
                             sources=sources,
                             raw={"transcript": transcript},
                         )
-                    self._execute_action(page, action)
-                    sources.append({"url": page.url})
-                    messages.append({"role": "assistant", "content": content})
+
+                    if action.name != "screenshot_request":
+                        self._execute(page, action)
+                        sources.append({"url": page.url})
+                    messages.append({"role": "assistant", "content": json.dumps(action.args)})
                     messages.append(self._screenshot_message(page, "Result. Next action?"))
-                    # Enforce the image budget: drop older screenshots.
                     _trim_images(messages, _MAX_IMAGES)
                 browser.close()
         except ResearchError:
@@ -206,7 +287,6 @@ class Holo3ResearchEngine(ResearchEngine):
             log.error("holo_research_failed", email=prospect.email, error=str(exc))
             raise ResearchError(f"Holo research failed: {exc}") from exc
 
-        # Clean fallback: nothing conclusive found.
         log.info("holo_no_hook", email=prospect.email)
         return ResearchResult(
             engine=self.name, hooks=[], sources=sources, raw={"transcript": transcript}
@@ -215,12 +295,12 @@ class Holo3ResearchEngine(ResearchEngine):
 
 def _trim_images(messages: list[dict[str, Any]], keep: int) -> None:
     """Strip image parts from all but the last `keep` image-bearing messages."""
-    image_idxs = [
+    idxs = [
         i
         for i, m in enumerate(messages)
         if isinstance(m.get("content"), list)
-        and any(part.get("type") == "image_url" for part in m["content"])
+        and any(p.get("type") == "image_url" for p in m["content"])
     ]
-    for i in image_idxs[:-keep]:
+    for i in idxs[:-keep]:
         m = messages[i]
         m["content"] = [p for p in m["content"] if p.get("type") != "image_url"] or "[screenshot]"

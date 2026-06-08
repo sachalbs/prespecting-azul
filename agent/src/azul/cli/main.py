@@ -182,5 +182,51 @@ def linkedin_login() -> None:
     typer.echo(f"Saved LinkedIn session to {path}")
 
 
+@app.command("doctor")
+def doctor() -> None:
+    """Preflight: check selected adapters, keys, and files before a real run."""
+    from pathlib import Path
+
+    s = get_settings()
+    typer.echo(f"DB: {s.database_url}")
+    typer.echo(
+        f"adapters: sourcing={s.sourcing_provider} research={s.research_engine} "
+        f"writer={s.writer_provider} channel={s.channel}"
+    )
+    checks: list[tuple[str, bool]] = []
+    if s.sourcing_provider == "prospeo":
+        checks.append(("PROSPEO_API_KEY", bool(s.prospeo_api_key)))
+    if s.research_engine == "holo3":
+        import importlib.util
+
+        checks.append(("HAI_API_KEY", bool(s.hai_api_key)))
+        checks.append(
+            ("playwright installed", importlib.util.find_spec("playwright") is not None)
+        )
+        if s.linkedin_storage_state:
+            checks.append(
+                (f"LinkedIn session ({s.linkedin_storage_state})",
+                 Path(s.linkedin_storage_state).exists())
+            )
+    if s.writer_provider == "openai_compat":
+        checks.append(("WRITER_BASE_URL", bool(s.writer_base_url)))
+        checks.append(("WRITER_MODEL", bool(s.writer_model)))
+        checks.append(("WRITER_API_KEY", bool(s.writer_api_key)))
+        checks.append(
+            (f"playbook ({s.writer_playbook_path})", Path(s.writer_playbook_path).exists())
+        )
+    if s.channel == "graph":
+        checks.append(("GRAPH_CLIENT_ID", bool(s.graph_client_id)))
+        checks.append(
+            (f"Graph token cached ({s.graph_token_cache})", Path(s.graph_token_cache).exists())
+        )
+    for label, good in checks:
+        typer.echo(f"  {'OK ' if good else 'MISSING'} {label}")
+    missing = [label for label, good in checks if not good]
+    typer.echo(
+        f"\n{len(missing)} item(s) need attention." if missing else "\nAll preflight checks passed."
+    )
+
+
 if __name__ == "__main__":
     app()

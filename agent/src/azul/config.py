@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     # Research — Holo3 computer-use (OpenAI-compatible, drives a headless browser)
     hai_api_key: str | None = None
     holo_base_url: str = "https://api.hcompany.ai/v1"
-    holo_model: str = "holo3-35b-a3b"
+    holo_model: str = "holo3-1-35b-a3b"
     holo_max_steps: int = 25
     holo_timeout_s: int = 120
     holo_headless: bool = True
