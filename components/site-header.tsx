@@ -13,7 +13,7 @@ export function SiteHeader() {
           <Wordmark />
         </a>
 
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-2.5 sm:gap-3">
           {/* language toggle — English is the principal version */}
           <div className="flex items-center border border-ink font-mono text-[0.7rem] font-semibold uppercase">
             <button
@@ -38,9 +38,12 @@ export function SiteHeader() {
             </button>
           </div>
 
-          <a href="#waitlist" className="btn px-5 py-2.5 text-[0.85rem]">
+          <a
+            href="#waitlist"
+            className="btn whitespace-nowrap px-3.5 py-2 text-[0.72rem] sm:px-5 sm:py-2.5 sm:text-[0.85rem]"
+          >
             {t.cta}
-            <WideArrow className="h-2.5 w-6" />
+            <WideArrow className="h-2.5 w-5 sm:w-6" />
           </a>
         </nav>
       </div>

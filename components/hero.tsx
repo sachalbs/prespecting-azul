@@ -28,7 +28,7 @@ function ChannelLogo({ icon, label }: { icon: ReactNode; label: string }) {
 
 function LiquidBlob() {
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[360px]">
+    <div className="relative mx-auto aspect-square w-full max-w-[280px] sm:max-w-[330px] lg:max-w-[360px]">
       <LiquidMetal />
     </div>
   );
