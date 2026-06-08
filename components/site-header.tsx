@@ -15,7 +15,7 @@ export function SiteHeader() {
         </a>
 
         <nav className="flex items-center gap-2.5 sm:gap-3">
-          {/* language toggle — English is the principal version */}
+          {/* language toggle: English is the principal version */}
           <div className="flex items-center border border-ink font-mono text-[0.7rem] font-semibold uppercase">
             <button
               type="button"

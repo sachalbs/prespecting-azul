@@ -3,7 +3,7 @@
 // Faithful port of the Framer "BackgroundRippleEffect" code component.
 // The only changes vs. the original are the Framer-editor-only imports
 // (addPropertyControls / ControlType / useIsStaticRenderer), which are stubbed
-// out — the runtime logic and framer-motion usage are identical.
+// out. The runtime logic and framer-motion usage are identical.
 
 import {
   useMemo,

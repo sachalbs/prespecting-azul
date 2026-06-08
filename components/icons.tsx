@@ -111,7 +111,7 @@ export function Cross(props: IconProps) {
   );
 }
 
-/* ---- Channel marks (monochrome, schematic — inherit currentColor) ------ */
+/* ---- Channel marks (monochrome, schematic, inherit currentColor) ------ */
 /* Kept single-color and simplified on purpose: these signal "works with",
    they are not reproductions of the official multi-color brand logos.      */
 

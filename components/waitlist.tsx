@@ -24,7 +24,7 @@ export function Waitlist() {
             </p>
           </div>
 
-          {/* waitlist CTA — opens the Typeform popup */}
+          {/* waitlist CTA: opens the Typeform popup */}
           <div>
             <WaitlistTrigger className="btn w-full justify-center sm:w-auto">
               {t.cta}

@@ -37,7 +37,7 @@
     @apply font-display font-black uppercase leading-[0.92] tracking-[-0.02em];
   }
 
-  /* Technical, monospace micro-label — the spec-sheet voice. */
+  /* Technical, monospace micro-label: the spec-sheet voice. */
   .label {
     @apply inline-flex items-center gap-2.5 font-mono text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted;
   }
@@ -167,7 +167,7 @@
   }
 }
 
-/* Brushed-aluminium backdrop — also the fallback when the bg video is blocked. */
+/* Brushed-aluminium backdrop, also the fallback when the bg video is blocked. */
 .metal-bg {
   background-color: #20242b;
   background-image:
@@ -201,7 +201,7 @@
   100% { transform: translateX(-28%); }
 }
 
-/* "BlendText" — the headline inverts against whatever moves behind it. */
+/* "BlendText": the headline inverts against whatever moves behind it. */
 .blend-text {
   mix-blend-mode: difference;
   color: #fff;
@@ -219,7 +219,7 @@
   }
 }
 
-/* Glossy blue 3D liquid blob — hero accent shape. */
+/* Glossy blue 3D liquid blob: hero accent shape. */
 .liquid-blob {
   border-radius: 60% 40% 55% 45% / 55% 50% 50% 45%;
   background: radial-gradient(
@@ -266,7 +266,7 @@
   mix-blend-mode: multiply;
 }
 
-/* Variant B — brushed/chrome aluminium (the floating metal thing). */
+/* Variant B: brushed/chrome aluminium (the floating metal thing). */
 .liquid-blob.is-metal {
   background:
     radial-gradient(120% 120% at 30% 22%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 36%),
@@ -281,7 +281,7 @@
     0 36px 80px -28px rgba(40, 48, 66, 0.55);
 }
 
-/* Variant C — blue chrome. */
+/* Variant C: blue chrome. */
 .liquid-blob.is-bluechrome {
   background:
     radial-gradient(120% 120% at 30% 22%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 34%),

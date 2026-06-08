@@ -18,7 +18,7 @@ function Ref({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** A researched, referenced outbound message — shown as a draft awaiting the
+/** A researched, referenced outbound message, shown as a draft awaiting the
  *  user's approval (the human-in-the-loop the brief describes). */
 export function MessageCard() {
   const { t } = useLang();

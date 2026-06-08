@@ -25,7 +25,7 @@ export function SiteFooter() {
             </a>
           </nav>
           <p className="text-[0.72rem] font-semibold uppercase tracking-label text-muted/80">
-            © {new Date().getFullYear()} Azul — {t.footer.rights}
+            © {new Date().getFullYear()} Azul · {t.footer.rights}
           </p>
         </div>
       </div>

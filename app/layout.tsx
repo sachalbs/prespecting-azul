@@ -20,7 +20,7 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
-const title = "Azul — The autonomous rep that gets your prospects to reply";
+const title = "Azul: The autonomous rep that gets your prospects to reply";
 const description =
   "Azul is an autonomous AI sales rep (SDR). It researches every prospect in depth, writes a genuinely personal message, and drives up your reply rate. You manage it from Slack, WhatsApp or Teams.";
 

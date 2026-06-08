@@ -37,13 +37,13 @@ const dict = {
         "You measure volume",
       ],
       punch: "→ Result: you land in spam.",
-      azulTag: "Azul’s approach — a message written for Camille",
+      azulTag: "Azul’s approach: a message written for Camille",
     },
     card: {
       role: "Head of Sales · Lumen",
       signals: "4 signals",
       chips: [
-        "Series A — 3 weeks ago",
+        "Series A · 3 weeks ago",
         "Hiring 4 SDRs",
         "HubSpot + Apollo",
         "Posted about outbound",
@@ -60,7 +60,7 @@ const dict = {
         [
           "You’re already on ",
           "HubSpot and Apollo",
-          " — I have a precise approach in mind for your first sequences. Ten minutes next week?",
+          ". I have a precise approach in mind for your first sequences. Ten minutes next week?",
         ],
       ],
       draft: "Draft · to approve",
@@ -86,7 +86,7 @@ const dict = {
     waitlist: {
       tag: "Early access",
       h: "Join the waitlist.",
-      sub: "Azul is in early access. No public customers, no numbers to flaunt — we’re building it with the first teams.",
+      sub: "Azul is in early access. No public customers, no numbers to flaunt. We’re building it with the first teams.",
       note: "We onboard in small waves, in signup order.",
     },
     form: {
@@ -132,13 +132,13 @@ const dict = {
         "On mesure le volume",
       ],
       punch: "→ Résultat : vous finissez en spam.",
-      azulTag: "L’approche d’Azul — un message écrit pour Camille",
+      azulTag: "L’approche d’Azul : un message écrit pour Camille",
     },
     card: {
       role: "Head of Sales · Lumen",
       signals: "4 signaux",
       chips: [
-        "Série A — il y a 3 semaines",
+        "Série A · il y a 3 semaines",
         "Recrute 4 SDR",
         "HubSpot + Apollo",
         "A publié sur l’outbound",
@@ -155,7 +155,7 @@ const dict = {
         [
           "Vous êtes déjà sur ",
           "HubSpot et Apollo",
-          " — j’ai une approche précise en tête pour vos premières séquences. Dix minutes la semaine prochaine ?",
+          ". J’ai une approche précise en tête pour vos premières séquences. Dix minutes la semaine prochaine ?",
         ],
       ],
       draft: "Brouillon · à valider",

@@ -49,7 +49,7 @@ export default function LiquidMetal() {
       <ambientLight intensity={1.15} />
       <Blob />
       <Environment resolution={512}>
-        {/* big blue fill — floods the metal with bright blue */}
+        {/* big blue fill: floods the metal with bright blue */}
         <Lightformer
           form="rect"
           intensity={3.3}
@@ -57,7 +57,7 @@ export default function LiquidMetal() {
           scale={[16, 16, 1]}
           color="#e2ecff"
         />
-        {/* white key — the glossy highlight */}
+        {/* white key: the glossy highlight */}
         <Lightformer
           form="rect"
           intensity={4}
