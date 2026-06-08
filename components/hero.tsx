@@ -44,7 +44,7 @@ export function Hero() {
 
       {/* content sits above the ripple (z-10); pointer-events pass through to the
           grid, except on the interactive elements (re-enabled below) */}
-      <div className="shell pointer-events-none relative z-10 pb-14 pt-6 lg:pb-20">
+      <div className="shell pointer-events-none relative z-10 flex min-h-[calc(100dvh-4rem)] flex-col pb-10 pt-6">
         {/* system bar */}
         <div
           className="enter flex items-center justify-between border-b border-line py-3 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted"
@@ -56,7 +56,7 @@ export function Hero() {
         </div>
 
         {/* headline + blob */}
-        <div className="grid items-center gap-10 pt-12 lg:grid-cols-[1.05fr_minmax(300px,380px)] lg:gap-14 lg:pt-16">
+        <div className="grid flex-1 items-center gap-10 py-12 lg:grid-cols-[1.05fr_minmax(300px,380px)] lg:gap-14">
           <div>
             <h1 className="text-[clamp(2.3rem,5.4vw,4.4rem)]">
               <span className="rise-wrap">
@@ -99,16 +99,23 @@ export function Hero() {
           <a
             href="#waitlist"
             aria-label={t.hero.blobAria}
-            className="enter pointer-events-auto block cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
+            className="enter group relative pointer-events-auto block cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
             style={d(440)}
           >
             <LiquidBlob />
+            {/* hover prompt to join the waitlist */}
+            <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <span className="flex translate-y-3 items-center gap-2 whitespace-nowrap border-2 border-ink bg-cobalt px-5 py-3 text-[0.8rem] font-bold uppercase tracking-[0.01em] text-white opacity-0 shadow-[5px_5px_0_0_#111114] transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                {t.cta}
+                <WideArrow className="h-3 w-6" />
+              </span>
+            </span>
           </a>
         </div>
 
         {/* channel logos */}
         <div
-          className="enter mt-12 flex flex-col gap-4 border-t border-line pt-7 sm:flex-row sm:items-center sm:justify-between"
+          className="enter flex flex-col gap-4 border-t border-line pt-7 sm:flex-row sm:items-center sm:justify-between"
           style={d(620)}
         >
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5">
