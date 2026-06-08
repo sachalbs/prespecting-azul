@@ -65,11 +65,15 @@ def build_messages(request: DraftRequest) -> list[dict[str, str]]:
         "sender_name": request.sender_name,
         "value_prop": request.value_prop,
     }
-    user = (
-        f"Write one outbound {request.channel} message using this context. "
-        "Anchor it on the hook.\n\n"
-        + json.dumps(context, ensure_ascii=False, indent=2, default=str)
-    )
+    if request.step > 1:
+        context["prior_message"] = request.prior_body
+        instruction = (
+            f"Write follow-up #{request.step} (they didn't reply). Keep it shorter than the "
+            "first, reference the prior note lightly, add ONE new angle, no guilt-trip."
+        )
+    else:
+        instruction = f"Write one outbound {request.channel} message. Anchor it on the hook."
+    user = instruction + "\n\n" + json.dumps(context, ensure_ascii=False, indent=2, default=str)
     return [
         {"role": "system", "content": system_prompt()},
         {"role": "user", "content": user},

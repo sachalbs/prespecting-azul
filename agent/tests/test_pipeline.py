@@ -56,6 +56,20 @@ def test_end_to_end_emits_reply_rate(tmp_path: Path) -> None:
         assert 0.0 <= report.reply_rate <= 1.0
 
 
+def test_followups_drafted_for_non_repliers(tmp_path: Path) -> None:
+    rows = camp.load_prospects_csv(_write_csv(tmp_path))
+    with session_scope() as s:
+        cid = camp.run_campaign(s, tenant_slug="t1", name="Q1", rows=rows).id
+    with session_scope() as s:
+        camp.approve(s, campaign_id=cid, approve_all=True)
+    with session_scope() as s:
+        camp.send_approved(s, campaign_id=cid)
+    with session_scope() as s:
+        assert camp.generate_followups(s, campaign_id=cid) == 1  # the sent, non-replied one
+    with session_scope() as s:
+        assert camp.generate_followups(s, campaign_id=cid) == 0  # idempotent
+
+
 def test_rerun_upserts_prospects(tmp_path: Path) -> None:
     rows = camp.load_prospects_csv(_write_csv(tmp_path))
     with session_scope() as s:

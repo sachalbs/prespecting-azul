@@ -44,6 +44,7 @@ from azul.errors import AzulError, ChannelError
 from azul.logging import get_logger
 from azul.memory import EpisodicMemory
 from azul.orchestrator.graph import build_pipeline
+from azul.writing import DraftRequest, get_writer
 
 log = get_logger(__name__)
 
@@ -148,6 +149,18 @@ def _brief_from_row(row: CsvRow) -> ProspectBrief:
         company_domain=row.company_domain,
         segment=row.segment,
         signals=dict(row.signals),
+    )
+
+
+def _brief_from_prospect(p: Prospect) -> ProspectBrief:
+    return ProspectBrief(
+        email=p.email,
+        full_name=p.full_name,
+        title=p.title,
+        company=p.company,
+        company_domain=p.company_domain,
+        segment=p.segment,
+        signals=dict(p.signals or {}),
     )
 
 
@@ -390,6 +403,64 @@ def send_approved(session: Session, *, campaign_id: uuid.UUID, dry_run: bool = F
     session.flush()
     log.info("send_complete", campaign_id=str(campaign_id), sent=sent, dry_run=dry_run)
     return sent
+
+
+# ── follow-up (one relance for non-repliers, as a child message) ───────────
+
+
+def generate_followups(
+    session: Session,
+    *,
+    campaign_id: uuid.UUID,
+    sender_name: str | None = None,
+    value_prop: str | None = None,
+) -> int:
+    """Draft a step-2 follow-up for each sent prospect who hasn't replied/bounced."""
+    writer = get_writer()
+    step1 = session.scalars(
+        select(Message).where(
+            Message.campaign_id == campaign_id,
+            Message.step == 1,
+            Message.status == MessageStatus.SENT,
+        )
+    ).all()
+    created = 0
+    for m in step1:
+        if any(o.replied or o.bounced for o in m.outcomes):
+            continue
+        dedup_key = f"{m.tenant_id}:{m.prospect_id}:2"
+        if session.scalars(select(Message).where(Message.dedup_key == dedup_key)).first():
+            continue  # idempotent
+        prospect = m.prospect
+        draft = writer.write(
+            DraftRequest(
+                prospect=_brief_from_prospect(prospect),
+                hook=None,
+                step=2,
+                prior_body=m.final_body,
+                sender_name=sender_name,
+                value_prop=value_prop,
+            )
+        )
+        session.add(
+            Message(
+                tenant_id=m.tenant_id,
+                prospect_id=prospect.id,
+                campaign_id=campaign_id,
+                parent_message_id=m.id,
+                step=2,
+                channel=Channel.EMAIL,
+                angle=draft.angle,
+                subject=f"Re: {m.subject}" if m.subject else draft.subject,
+                body=draft.body,
+                status=MessageStatus.DRAFT,
+                dedup_key=dedup_key,
+            )
+        )
+        created += 1
+    session.flush()
+    log.info("followups_drafted", campaign_id=str(campaign_id), count=created)
+    return created
 
 
 # ── simulate replies (stub channel only — populates a real number) ──────────

@@ -17,6 +17,9 @@ class DraftRequest:
     sender_name: str | None = None
     # One line on who we are / what we offer — kept short on purpose.
     value_prop: str | None = None
+    # Follow-ups: step >= 2, with the prior message for light context.
+    step: int = 1
+    prior_body: str | None = None
 
 
 @dataclass

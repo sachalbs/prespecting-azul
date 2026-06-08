@@ -182,6 +182,15 @@ def linkedin_login() -> None:
     typer.echo(f"Saved LinkedIn session to {path}")
 
 
+@app.command("follow-up")
+def follow_up(campaign: str = typer.Option(..., help="Campaign id or name")) -> None:
+    """Draft one follow-up for each prospect who hasn't replied (a child message)."""
+    with session_scope() as session:
+        c = camp.resolve_campaign(session, campaign)
+        n = camp.generate_followups(session, campaign_id=c.id)
+    typer.echo(f"Drafted {n} follow-up(s).")
+
+
 @app.command("doctor")
 def doctor() -> None:
     """Preflight: check selected adapters, keys, and files before a real run."""

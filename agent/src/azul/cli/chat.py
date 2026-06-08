@@ -11,6 +11,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 
+from azul.cli.intent import interpret
 from azul.db.session import session_scope
 from azul.orchestrator import campaign as camp
 
@@ -23,6 +24,8 @@ I'm Azul. Manage me like an SDR. Commands:
   send [dry]                        send approved mail (paced, from your mailbox)
   sync                              pull replies/bounces into outcomes
   report                            the number that matters: reply rate
+  follow-up                         draft a relance for everyone who didn't reply
+  status                            quick state of the current campaign
   help · quit
 """
 
@@ -34,14 +37,22 @@ class ChatSession:
     campaign_id: uuid.UUID | None = None
     listing: list[uuid.UUID] = field(default_factory=list)
 
-    def handle(self, line: str) -> str:
+    def handle(self, line: str, _interpreted: bool = False) -> str:
         line = line.strip()
         if not line:
             return ""
         cmd, _, rest = line.partition(" ")
-        cmd = cmd.lower()
-        rest = rest.strip()
+        out = self._dispatch(cmd.lower(), rest.strip())
+        if out is not None:
+            return out
+        # Unknown command: try the NL intent parser (Writer LLM), then dispatch once.
+        if not _interpreted:
+            translated = interpret(line)
+            if translated:
+                return self.handle(translated, _interpreted=True)
+        return "Didn't catch that. Type `help`."
 
+    def _dispatch(self, cmd: str, rest: str) -> str | None:
         if cmd in ("help", "?"):
             return HELP
         if cmd in ("campaign", "new"):
@@ -58,7 +69,11 @@ class ChatSession:
             return self._sync()
         if cmd == "report":
             return self._report()
-        return "Didn't catch that. Type `help`."
+        if cmd == "status":
+            return self._status()
+        if cmd in ("follow-up", "followup", "relance"):
+            return self._followup()
+        return None
 
     # ── commands ──────────────────────────────────────────────────────────────
     def _campaign(self, rest: str) -> str:
@@ -164,6 +179,26 @@ class ChatSession:
             f"{r.campaign}: {r.sent} sent · {r.replied} replied · {r.meetings} meetings · "
             f"{r.bounced} bounced → REPLY RATE {r.reply_rate:.0%}"
         )
+
+    def _status(self) -> str:
+        if self.campaign_id is None:
+            return "No campaign yet. Start one: campaign <name> from <file.csv>"
+        with session_scope() as s:
+            r = camp.build_report(s, campaign_id=self.campaign_id)
+            awaiting = len(camp.list_drafts(s, self.campaign_id))
+        return (
+            f"{r.campaign}: {r.drafted} drafted · {awaiting} awaiting approval · "
+            f"{r.sent} sent · {r.replied} replied."
+        )
+
+    def _followup(self) -> str:
+        if self.campaign_id is None:
+            return "Start a campaign first."
+        with session_scope() as s:
+            n = camp.generate_followups(
+                s, campaign_id=self.campaign_id, sender_name=self.sender
+            )
+        return f"Drafted {n} follow-up(s) for non-repliers. `show`, then approve/send."
 
 
 def run_chat() -> None:

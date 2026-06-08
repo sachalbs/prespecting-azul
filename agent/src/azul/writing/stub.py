@@ -17,8 +17,11 @@ class StubWriter(Writer):
     def write(self, request: DraftRequest) -> Draft:
         p = request.prospect
         greeting = f"Hi {p.first_name}," if p.first_name else "Hi,"
-        hook_line = request.hook or f"Been following {p.company or 'your work'}."
         ask = "Worth a quick 15 min next week?"
+        if request.step > 1:
+            line = "Circling back on my last note — still think it's worth a chat."
+            return Draft(body=f"{greeting}\n\n{line} {ask}", subject=None, angle="follow-up")
+        hook_line = request.hook or f"Been following {p.company or 'your work'}."
         body = f"{greeting}\n\n{hook_line}\n\n{ask}"
         subject = f"quick thought on {p.company}" if p.company else "quick thought"
         return Draft(body=body, subject=subject, angle="hook-led")

@@ -128,3 +128,29 @@ def test_graph_fetch_replies_parses_and_flags_bounce() -> None:
     assert len(replies) == 2
     assert replies[0].from_email == "jane@acme.com" and not replies[0].is_bounce
     assert replies[1].is_bounce
+
+
+# ── chat NL intent (Writer LLM) ─────────────────────────────────────────────
+
+
+def test_interpret_maps_free_text_to_command() -> None:
+    from azul.cli.intent import interpret
+
+    payload = {"choices": [{"message": {"content": '{"command":"approve","args":"1 3"}'}}]}
+    with (
+        env(
+            WRITER_PROVIDER="openai_compat",
+            WRITER_BASE_URL="https://llm.test/v1",
+            WRITER_MODEL="m",
+            WRITER_API_KEY="k",
+        ),
+        respx.mock(base_url="https://llm.test/v1") as router,
+    ):
+        router.post("/chat/completions").mock(return_value=httpx.Response(200, json=payload))
+        assert interpret("approuve le 1 et le 3") == "approve 1 3"
+
+
+def test_interpret_returns_none_without_writer() -> None:
+    from azul.cli.intent import interpret
+
+    assert interpret("n'importe quoi") is None  # stub mode: no openai_compat writer
