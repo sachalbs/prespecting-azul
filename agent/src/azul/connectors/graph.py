@@ -7,7 +7,7 @@ Sending is always an API call from the real mailbox — never computer-use.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, ClassVar
 
 import httpx
@@ -74,7 +74,7 @@ class GraphChannel(Channel):
             "$orderby": "receivedDateTime desc",
         }
         if since is not None:
-            iso = since.astimezone().strftime("%Y-%m-%dT%H:%M:%SZ")
+            iso = since.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
             params["$filter"] = f"receivedDateTime ge {iso}"
         try:
             resp = self._client.get("/me/mailFolders/inbox/messages", params=params)
