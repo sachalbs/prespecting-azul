@@ -53,10 +53,6 @@ export function Hero() {
           <span>
             <span className="text-ink">azul</span> {t.hero.sysPost}
           </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            {t.hero.sysActive}
-          </span>
         </div>
 
         {/* headline + blob */}
