@@ -26,6 +26,8 @@ COMMANDS = (
     "report",
     "status",
     "follow-up",
+    "learn",
+    "memory",
     "help",
 )
 

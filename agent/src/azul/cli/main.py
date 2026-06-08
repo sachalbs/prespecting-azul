@@ -182,6 +182,16 @@ def linkedin_login() -> None:
     typer.echo(f"Saved LinkedIn session to {path}")
 
 
+@app.command("learn")
+def learn() -> None:
+    """Run the flywheel curator: mine outcomes into procedural skills."""
+    from azul.memory.flywheel import run_curator
+
+    with session_scope() as session:
+        n = run_curator(session)
+    typer.echo(f"Curated {n} skill pattern(s) from outcomes.")
+
+
 @app.command("follow-up")
 def follow_up(campaign: str = typer.Option(..., help="Campaign id or name")) -> None:
     """Draft one follow-up for each prospect who hasn't replied (a child message)."""

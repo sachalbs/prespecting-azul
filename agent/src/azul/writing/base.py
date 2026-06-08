@@ -20,6 +20,8 @@ class DraftRequest:
     # Follow-ups: step >= 2, with the prior message for light context.
     step: int = 1
     prior_body: str | None = None
+    # Procedural memory: what's worked for this segment (a prior, not a script).
+    procedural_hint: str | None = None
 
 
 @dataclass

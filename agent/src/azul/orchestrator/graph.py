@@ -64,6 +64,7 @@ def build_pipeline(
                 channel="email",
                 sender_name=state.get("sender_name"),
                 value_prop=state.get("value_prop"),
+                procedural_hint=state.get("procedural_hint"),
             )
         )
         return {"draft": draft}

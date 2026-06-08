@@ -42,7 +42,7 @@ from azul.enums import (
 )
 from azul.errors import AzulError, ChannelError
 from azul.logging import get_logger
-from azul.memory import EpisodicMemory
+from azul.memory import EpisodicMemory, ProceduralMemory
 from azul.orchestrator.graph import build_pipeline
 from azul.writing import DraftRequest, get_writer
 
@@ -237,6 +237,7 @@ def run_campaign(
     session.flush()
 
     pipeline = build_pipeline()
+    procedural = ProceduralMemory(session)
 
     for row in rows:
         state = pipeline.invoke(
@@ -244,6 +245,8 @@ def run_campaign(
                 "prospect": _brief_from_row(row),
                 "sender_name": sender_name,
                 "value_prop": value_prop,
+                # Flywheel: inject what's worked for this segment as a prior.
+                "procedural_hint": procedural.hint_for(row.segment),
             }
         )
 

@@ -62,6 +62,7 @@ def build_messages(request: DraftRequest) -> list[dict[str, str]]:
         },
         "hook": request.hook,
         "dossier": dict(p.signals),
+        "whats_worked": request.procedural_hint,
         "sender_name": request.sender_name,
         "value_prop": request.value_prop,
     }

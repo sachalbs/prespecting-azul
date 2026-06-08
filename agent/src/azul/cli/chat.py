@@ -26,6 +26,8 @@ I'm Azul. Manage me like an SDR. Commands:
   report                            the number that matters: reply rate
   follow-up                         draft a relance for everyone who didn't reply
   status                            quick state of the current campaign
+  learn                             mine outcomes into what works (the flywheel)
+  memory                            show what I've learned by segment
   help · quit
 """
 
@@ -73,6 +75,10 @@ class ChatSession:
             return self._status()
         if cmd in ("follow-up", "followup", "relance"):
             return self._followup()
+        if cmd == "learn":
+            return self._learn()
+        if cmd in ("memory", "learned", "brain"):
+            return self._memory()
         return None
 
     # ── commands ──────────────────────────────────────────────────────────────
@@ -199,6 +205,29 @@ class ChatSession:
                 s, campaign_id=self.campaign_id, sender_name=self.sender
             )
         return f"Drafted {n} follow-up(s) for non-repliers. `show`, then approve/send."
+
+    def _learn(self) -> str:
+        from azul.memory.flywheel import run_curator
+
+        with session_scope() as s:
+            n = run_curator(s)
+        return f"Learned/updated {n} pattern(s) from outcomes. Ask `memory` to see them."
+
+    def _memory(self) -> str:
+        from sqlalchemy import select
+
+        from azul.db.models import Skill
+
+        with session_scope() as s:
+            skills = list(s.scalars(select(Skill).order_by(Skill.eval_score.desc())))[:8]
+            lines = [
+                f"  {sk.segment}/{sk.pattern}: {(sk.win_rate or 0):.0%} over "
+                f"{sk.sample_size} (score {(sk.eval_score or 0):.2f})"
+                for sk in skills
+            ]
+        if not lines:
+            return "Nothing learned yet. Run a campaign, get outcomes, then `learn`."
+        return "What I've learned so far:\n" + "\n".join(lines)
 
 
 def run_chat() -> None:
