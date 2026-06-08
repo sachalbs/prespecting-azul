@@ -2,6 +2,7 @@
 
 import { Wordmark } from "./wordmark";
 import { WideArrow } from "./icons";
+import { WaitlistTrigger } from "./waitlist-trigger";
 import { useLang } from "./lang-provider";
 
 export function SiteHeader() {
@@ -38,13 +39,10 @@ export function SiteHeader() {
             </button>
           </div>
 
-          <a
-            href="#waitlist"
-            className="btn whitespace-nowrap px-3.5 py-2 text-[0.72rem] sm:px-5 sm:py-2.5 sm:text-[0.85rem]"
-          >
+          <WaitlistTrigger className="btn whitespace-nowrap px-3.5 py-2 text-[0.72rem] sm:px-5 sm:py-2.5 sm:text-[0.85rem]">
             {t.cta}
             <WideArrow className="h-2.5 w-5 sm:w-6" />
-          </a>
+          </WaitlistTrigger>
         </nav>
       </div>
     </header>

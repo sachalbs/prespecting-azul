@@ -1,6 +1,7 @@
 "use client";
 
-import { WaitlistForm } from "./waitlist-form";
+import { WaitlistTrigger } from "./waitlist-trigger";
+import { WideArrow } from "./icons";
 import { Reveal } from "./reveal";
 import { useLang } from "./lang-provider";
 
@@ -23,10 +24,13 @@ export function Waitlist() {
             </p>
           </div>
 
-          {/* form */}
+          {/* waitlist CTA — opens the Typeform popup */}
           <div>
-            <WaitlistForm />
-            <p className="text-[0.83rem] text-muted">{t.waitlist.note}</p>
+            <WaitlistTrigger className="btn w-full justify-center sm:w-auto">
+              {t.cta}
+              <WideArrow className="h-3 w-7" />
+            </WaitlistTrigger>
+            <p className="mt-4 text-[0.83rem] text-muted">{t.waitlist.note}</p>
           </div>
         </div>
       </Reveal>

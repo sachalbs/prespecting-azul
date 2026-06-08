@@ -11,6 +11,7 @@ import {
 } from "./icons";
 import LiquidMetal from "./liquid-metal";
 import BackgroundRippleEffect from "./background-ripple-effect";
+import { WaitlistTrigger } from "./waitlist-trigger";
 import { useLang } from "./lang-provider";
 
 function d(ms: number): CSSProperties {
@@ -82,10 +83,10 @@ export function Hero() {
               className="enter mt-8 flex flex-wrap items-center gap-x-7 gap-y-4"
               style={d(520)}
             >
-              <a href="#waitlist" className="btn pointer-events-auto">
+              <WaitlistTrigger className="btn pointer-events-auto">
                 {t.cta}
                 <WideArrow className="h-3 w-7" />
-              </a>
+              </WaitlistTrigger>
               <a
                 href="#problem"
                 className="group pointer-events-auto inline-flex items-center gap-2.5 text-[0.95rem] font-semibold text-ink transition-colors hover:text-cobalt"
@@ -96,10 +97,9 @@ export function Hero() {
             </div>
           </div>
 
-          <a
-            href="#waitlist"
-            aria-label={t.hero.blobAria}
-            className="enter group relative pointer-events-auto block cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
+          <WaitlistTrigger
+            ariaLabel={t.hero.blobAria}
+            className="enter group relative pointer-events-auto block w-full cursor-pointer border-0 bg-transparent p-0 transition-transform duration-300 hover:scale-[1.02]"
             style={d(440)}
           >
             <LiquidBlob />
@@ -110,7 +110,7 @@ export function Hero() {
                 <WideArrow className="h-3 w-6" />
               </span>
             </span>
-          </a>
+          </WaitlistTrigger>
         </div>
 
         {/* channel logos */}
