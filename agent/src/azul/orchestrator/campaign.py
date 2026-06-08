@@ -191,6 +191,25 @@ def _upsert_prospect(
     return p
 
 
+def _find_prospect(session: Session, tenant: Tenant, row: CsvRow) -> Prospect | None:
+    """Best-effort lookup of an existing prospect (for relationship memory)."""
+    if row.email:
+        p = session.scalars(
+            select(Prospect).where(Prospect.tenant_id == tenant.id, Prospect.email == row.email)
+        ).first()
+        if p is not None:
+            return p
+    if row.full_name and row.company_domain:
+        return session.scalars(
+            select(Prospect).where(
+                Prospect.tenant_id == tenant.id,
+                Prospect.full_name == row.full_name,
+                Prospect.company_domain == row.company_domain,
+            )
+        ).first()
+    return None
+
+
 def _ensure_membership(
     session: Session, campaign: Campaign, prospect: Prospect
 ) -> CampaignProspect:
@@ -238,15 +257,19 @@ def run_campaign(
 
     pipeline = build_pipeline()
     procedural = ProceduralMemory(session)
+    episodic = EpisodicMemory(session)
 
     for row in rows:
+        existing = _find_prospect(session, tenant, row)
         state = pipeline.invoke(
             {
                 "prospect": _brief_from_row(row),
                 "sender_name": sender_name,
                 "value_prop": value_prop,
-                # Flywheel: inject what's worked for this segment as a prior.
+                # Flywheel: what's worked for this segment (procedural memory).
                 "procedural_hint": procedural.hint_for(row.segment),
+                # Relationship memory: our prior history with this person (episodic).
+                "relationship_note": episodic.recall(existing.id) if existing else None,
             }
         )
 

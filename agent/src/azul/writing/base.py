@@ -22,6 +22,8 @@ class DraftRequest:
     prior_body: str | None = None
     # Procedural memory: what's worked for this segment (a prior, not a script).
     procedural_hint: str | None = None
+    # Episodic memory: our prior relationship with THIS person, if any.
+    relationship_note: str | None = None
 
 
 @dataclass

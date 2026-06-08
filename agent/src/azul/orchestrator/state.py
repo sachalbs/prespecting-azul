@@ -15,6 +15,7 @@ class ProspectState(TypedDict):
     sender_name: NotRequired[str | None]
     value_prop: NotRequired[str | None]
     procedural_hint: NotRequired[str | None]
+    relationship_note: NotRequired[str | None]
     email_status: NotRequired[EmailStatus]
     resolved_email: NotRequired[str | None]
     dossier: NotRequired[dict[str, Any]]

@@ -5,12 +5,12 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from azul.connectors.base import InboundReply
 from azul.db.models import Message, Outcome
-from azul.enums import MembershipStatus, ReplySentiment
+from azul.enums import MembershipStatus, MessageStatus, ReplySentiment
 from azul.logging import get_logger
 
 log = get_logger(__name__)
@@ -102,3 +102,29 @@ class EpisodicMemory:
         membership = self.session.scalars(stmt).first()
         if membership:
             membership.status = MembershipStatus.REPLIED
+
+    def recall(self, prospect_id: uuid.UUID) -> str | None:
+        """A one-line relationship memory: have we touched this person before?"""
+        sent = self.session.scalars(
+            select(Message)
+            .where(Message.prospect_id == prospect_id, Message.status == MessageStatus.SENT)
+            .order_by(Message.sent_at.desc())
+        ).all()
+        if not sent:
+            return None
+        last = sent[0]
+        replied = (
+            self.session.scalar(
+                select(func.count())
+                .select_from(Outcome)
+                .join(Message)
+                .where(Message.prospect_id == prospect_id, Outcome.replied.is_(True))
+            )
+            or 0
+        )
+        when = last.sent_at.date().isoformat() if last.sent_at else "before"
+        mood = "they replied before (warm)" if replied else "no reply yet"
+        return (
+            f"You've reached this person {len(sent)}x before "
+            f"(last angle '{last.angle or 'n/a'}', {when}); {mood}. Don't repeat yourself."
+        )
