@@ -36,6 +36,10 @@ log = get_logger(__name__)
 
 _MAX_IMAGES = 3  # image budget: keep only the most recent screenshots in context
 _COORD_SCALE = 1000.0  # Holo coordinates are normalised to [0, 1000]
+_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+)
 
 _HOLO_SYSTEM = """\
 You are a research agent controlling a web browser to find ONE specific,
@@ -234,9 +238,18 @@ class Holo3ResearchEngine(ResearchEngine):
 
         try:
             with sync_playwright() as pw:
-                browser = pw.chromium.launch(headless=self._headless)
+                browser = pw.chromium.launch(
+                    headless=self._headless,
+                    args=["--disable-blink-features=AutomationControlled"],
+                )
                 ctx = browser.new_context(
-                    storage_state=self._storage_state if self._storage_state else None
+                    storage_state=self._storage_state if self._storage_state else None,
+                    user_agent=_USER_AGENT,
+                    locale="en-US",
+                )
+                # Reduce trivial bot detection so Azul can browse real sites (incl. LinkedIn).
+                ctx.add_init_script(
+                    "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
                 )
                 page = ctx.new_page()
                 page.goto(self._start_url(prospect), wait_until="domcontentloaded")
