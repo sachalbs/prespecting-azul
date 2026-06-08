@@ -1,28 +1,24 @@
+"use client";
+
 import { Reveal } from "./reveal";
 import { Cross } from "./icons";
 import { MessageCard } from "./message-card";
-
-const oldWay = [
-  "Templates à peine personnalisés",
-  "Toujours plus d’envois",
-  "Prospects grillés, réputation abîmée",
-  "On mesure le volume",
-];
+import { useLang } from "./lang-provider";
 
 export function Problem() {
+  const { t } = useLang();
   return (
     <section id="problem" className="shell py-20 sm:py-28">
       <Reveal className="max-w-3xl">
         <span className="label">
-          <span className="text-cobalt">01</span> / Le problème
+          <span className="text-cobalt">01</span> / {t.problem.tag}
         </span>
         <h2 className="mt-5 text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
-          Vos prospects sont saturés de messages{" "}
-          <span className="text-cobalt">génériques.</span>
+          {t.problem.hPre}{" "}
+          <span className="text-cobalt">{t.problem.hAccent}</span>
         </h2>
         <p className="mt-5 max-w-2xl text-[1.08rem] leading-relaxed text-muted">
-          La première vague de « SDR IA » a optimisé le volume. Azul prend le
-          problème à l’envers.
+          {t.problem.sub}
         </p>
       </Reveal>
 
@@ -32,10 +28,10 @@ export function Problem() {
           <div className="caution-stripes flex h-full flex-col border border-ink/10 bg-ink/[0.02] p-7">
             <span className="label !text-red-500/80">
               <Cross className="h-[0.9rem] w-[0.9rem]" />
-              L’approche au volume
+              {t.problem.volumeTitle}
             </span>
             <ul className="mt-6 space-y-4">
-              {oldWay.map((item) => (
+              {t.problem.oldWay.map((item) => (
                 <li
                   key={item}
                   className="flex items-start gap-3 text-[0.98rem] text-muted"
@@ -46,7 +42,7 @@ export function Problem() {
               ))}
             </ul>
             <p className="mt-auto border-t border-ink/10 pt-5 text-[0.95rem] font-semibold text-red-500/90">
-              → Résultat : vous finissez en spam.
+              {t.problem.punch}
             </p>
           </div>
         </Reveal>
@@ -55,7 +51,7 @@ export function Problem() {
         <Reveal delay={90}>
           <span className="label mb-3">
             <span className="sq" />
-            L’approche d’Azul — un message écrit pour Camille
+            {t.problem.azulTag}
           </span>
           <MessageCard />
         </Reveal>

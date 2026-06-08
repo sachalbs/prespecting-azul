@@ -20,9 +20,9 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
-const title = "Azul — Le commercial autonome qui fait répondre vos prospects";
+const title = "Azul — The autonomous rep that gets your prospects to reply";
 const description =
-  "Azul est un commercial autonome (SDR) propulsé par l'IA. Il recherche chaque prospect en profondeur, écrit un message vraiment personnel, et fait grimper votre taux de réponse. Vous le pilotez depuis Slack, WhatsApp ou Teams.";
+  "Azul is an autonomous AI sales rep (SDR). It researches every prospect in depth, writes a genuinely personal message, and drives up your reply rate. You manage it from Slack, WhatsApp or Teams.";
 
 export const metadata: Metadata = {
   title,
@@ -32,7 +32,8 @@ export const metadata: Metadata = {
     title,
     description,
     siteName: "Azul",
-    locale: "fr_FR",
+    locale: "en_US",
+    alternateLocale: "fr_FR",
     type: "website",
   },
   twitter: { card: "summary_large_image", title, description },
@@ -50,7 +51,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="fr"
+      lang="en"
       className={`${display.variable} ${sans.variable} ${mono.variable}`}
     >
       <body className="min-h-dvh">{children}</body>

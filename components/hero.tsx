@@ -1,3 +1,5 @@
+"use client";
+
 import type { CSSProperties, ReactNode } from "react";
 import {
   SlackMark,
@@ -9,6 +11,7 @@ import {
 } from "./icons";
 import LiquidMetal from "./liquid-metal";
 import BackgroundRippleEffect from "./background-ripple-effect";
+import { useLang } from "./lang-provider";
 
 function d(ms: number): CSSProperties {
   return { "--d": `${ms}ms` } as CSSProperties;
@@ -32,6 +35,7 @@ function LiquidBlob() {
 }
 
 export function Hero() {
+  const { t } = useLang();
   return (
     <section id="top" className="relative overflow-hidden border-b border-line">
       <div aria-hidden className="absolute inset-0 z-0">
@@ -47,12 +51,11 @@ export function Hero() {
           style={d(0)}
         >
           <span>
-            <span className="text-ink">azul</span> // moteur de prospection
-            autonome
+            <span className="text-ink">azul</span> {t.hero.sysPost}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            système actif
+            {t.hero.sysActive}
           </span>
         </div>
 
@@ -62,12 +65,12 @@ export function Hero() {
             <h1 className="text-[clamp(2.3rem,5.4vw,4.4rem)]">
               <span className="rise-wrap">
                 <span className="rise display text-ink" style={d(120)}>
-                  Le bon message,
+                  {t.hero.h1a}
                 </span>
               </span>
               <span className="rise-wrap">
                 <span className="rise display text-cobalt" style={d(240)}>
-                  au bon prospect.
+                  {t.hero.h1b}
                 </span>
               </span>
             </h1>
@@ -76,8 +79,7 @@ export function Hero() {
               className="enter mt-6 max-w-md text-[1.08rem] leading-relaxed text-muted"
               style={d(420)}
             >
-              Un moteur qui étudie chaque prospect et écrit le message qui fait
-              répondre.
+              {t.hero.sub}
             </p>
 
             <div
@@ -85,14 +87,14 @@ export function Hero() {
               style={d(520)}
             >
               <a href="#waitlist" className="btn pointer-events-auto">
-                Rejoindre la liste
+                {t.cta}
                 <WideArrow className="h-3 w-7" />
               </a>
               <a
                 href="#problem"
                 className="group pointer-events-auto inline-flex items-center gap-2.5 text-[0.95rem] font-semibold text-ink transition-colors hover:text-cobalt"
               >
-                Pourquoi Azul
+                {t.hero.why}
                 <WideArrow className="h-3 w-6 transition-transform duration-200 group-hover:translate-x-1.5" />
               </a>
             </div>
@@ -100,7 +102,7 @@ export function Hero() {
 
           <a
             href="#waitlist"
-            aria-label="Rejoindre la liste d’attente"
+            aria-label={t.hero.blobAria}
             className="enter pointer-events-auto block cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
             style={d(440)}
           >
@@ -115,7 +117,7 @@ export function Hero() {
         >
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5">
             <span className="font-mono text-[0.8rem] uppercase tracking-[0.14em] text-muted">
-              Piloté depuis
+              {t.hero.pilotedFrom}
             </span>
             <ChannelLogo icon={<SlackMark className="h-[1.35rem] w-[1.35rem]" />} label="Slack" />
             <ChannelLogo icon={<WhatsAppMark className="h-[1.35rem] w-[1.35rem]" />} label="WhatsApp" />
@@ -123,7 +125,7 @@ export function Hero() {
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5">
             <span className="font-mono text-[0.8rem] uppercase tracking-[0.14em] text-muted">
-              Prospecte via
+              {t.hero.prospectsVia}
             </span>
             <ChannelLogo icon={<MailMark className="h-[1.35rem] w-[1.35rem]" />} label="Email" />
             <ChannelLogo icon={<LinkedInMark className="h-[1.35rem] w-[1.35rem]" />} label="LinkedIn" />

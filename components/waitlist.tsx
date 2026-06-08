@@ -1,7 +1,11 @@
+"use client";
+
 import { WaitlistForm } from "./waitlist-form";
 import { Reveal } from "./reveal";
+import { useLang } from "./lang-provider";
 
 export function Waitlist() {
+  const { t } = useLang();
   return (
     <section id="waitlist" className="shell py-20 sm:py-28">
       <Reveal>
@@ -9,23 +13,20 @@ export function Waitlist() {
           {/* copy */}
           <div>
             <span className="label">
-              <span className="text-cobalt">03</span> / Accès anticipé
+              <span className="text-cobalt">03</span> / {t.waitlist.tag}
             </span>
             <h2 className="mt-5 display text-[clamp(2rem,5vw,3.4rem)] text-ink">
-              Rejoignez la liste d’attente.
+              {t.waitlist.h}
             </h2>
             <p className="mt-5 max-w-lg text-[1.05rem] leading-relaxed text-muted">
-              Accès anticipé. Pas de clients publics ni de chiffres à brandir :
-              on construit avec les premières équipes.
+              {t.waitlist.sub}
             </p>
           </div>
 
           {/* form */}
           <div>
             <WaitlistForm />
-            <p className="text-[0.83rem] text-muted">
-              On onboarde par petites vagues, dans l’ordre d’inscription.
-            </p>
+            <p className="text-[0.83rem] text-muted">{t.waitlist.note}</p>
           </div>
         </div>
       </Reveal>

@@ -1,3 +1,4 @@
+import { LangProvider } from "@/components/lang-provider";
 import { SiteHeader } from "@/components/site-header";
 import { Hero } from "@/components/hero";
 import { Problem } from "@/components/problem";
@@ -7,7 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 
 export default function Home() {
   return (
-    <>
+    <LangProvider>
       <SiteHeader />
       <main>
         <Hero />
@@ -16,6 +17,6 @@ export default function Home() {
         <Waitlist />
       </main>
       <SiteFooter />
-    </>
+    </LangProvider>
   );
 }

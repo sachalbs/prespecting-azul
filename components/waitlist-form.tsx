@@ -2,12 +2,15 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { WideArrow, Check } from "./icons";
+import { useLang } from "./lang-provider";
 
 type Status = "idle" | "loading" | "success" | "error";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function WaitlistForm() {
+  const { t } = useLang();
+  const f = t.form;
   const id = useId();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
@@ -19,7 +22,7 @@ export function WaitlistForm() {
 
     if (!EMAIL_RE.test(email.trim())) {
       setStatus("error");
-      setError("Indiquez une adresse email valide.");
+      setError(f.errEmail);
       return;
     }
 
@@ -36,7 +39,7 @@ export function WaitlistForm() {
       setStatus("success");
     } catch {
       setStatus("error");
-      setError("Un souci est survenu. Réessayez dans un instant.");
+      setError(f.errGeneric);
     }
   }
 
@@ -50,10 +53,8 @@ export function WaitlistForm() {
           <Check className="h-3.5 w-3.5" />
         </span>
         <p className="leading-relaxed text-ink">
-          <span className="font-semibold">Vous êtes sur la liste.</span>{" "}
-          <span className="text-muted">
-            Nous vous écrivons dès qu’une vague d’accès s’ouvre.
-          </span>
+          <span className="font-semibold">{f.successTitle}</span>{" "}
+          <span className="text-muted">{f.successBody}</span>
         </p>
       </div>
     );
@@ -62,7 +63,7 @@ export function WaitlistForm() {
   return (
     <form onSubmit={onSubmit} noValidate className="w-full">
       <label htmlFor={id} className="label mb-2 block">
-        <span className="sq" /> Email professionnel
+        <span className="sq" /> {f.label}
       </label>
       <div className="flex flex-col gap-2.5 sm:flex-row">
         <input
@@ -72,7 +73,7 @@ export function WaitlistForm() {
           inputMode="email"
           autoComplete="email"
           required
-          placeholder="vous@entreprise.com"
+          placeholder={f.placeholder}
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
@@ -90,7 +91,7 @@ export function WaitlistForm() {
           disabled={status === "loading"}
           className="btn h-[3.25rem] whitespace-nowrap"
         >
-          {status === "loading" ? "Un instant…" : "Rejoindre la liste"}
+          {status === "loading" ? f.loading : f.submit}
           {status !== "loading" && <WideArrow className="h-3 w-7" />}
         </button>
       </div>
