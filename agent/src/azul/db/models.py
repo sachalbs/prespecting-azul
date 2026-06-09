@@ -204,3 +204,17 @@ class Skill(UUIDMixin, TimestampMixin, Base):
     embedding: Mapped[list[float] | None] = mapped_column(
         vector_type(get_settings().embedding_dim), default=None
     )
+
+
+class ConnectedAccount(UUIDMixin, TimestampMixin, Base):
+    """Per-tenant OAuth credentials for a connected mailbox/channel (multi-tenant)."""
+
+    __tablename__ = "connected_accounts"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "provider", name="uq_connected_tenant_provider"),
+    )
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(40))
+    account_email: Mapped[str | None] = mapped_column(String(320), default=None)
+    refresh_token: Mapped[str] = mapped_column(Text)

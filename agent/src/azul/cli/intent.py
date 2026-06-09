@@ -17,6 +17,7 @@ from azul.logging import get_logger
 log = get_logger(__name__)
 
 COMMANDS = (
+    "connect",
     "campaign",
     "show",
     "approve",

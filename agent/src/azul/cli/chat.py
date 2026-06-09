@@ -12,11 +12,13 @@ import uuid
 from dataclasses import dataclass, field
 
 from azul.cli.intent import interpret
+from azul.config import get_settings
 from azul.db.session import session_scope
 from azul.orchestrator import campaign as camp
 
 HELP = """\
 I'm Azul. Manage me like an SDR. Commands:
+  connect                           connect your Outlook (one click) — sends go from your box
   campaign <name> from <file.csv>   start a campaign (source -> research -> draft)
   show                              show the drafts waiting for your approval
   approve all | approve 1 3         approve drafts (numbers from `show`)
@@ -57,6 +59,8 @@ class ChatSession:
     def _dispatch(self, cmd: str, rest: str) -> str | None:
         if cmd in ("help", "?"):
             return HELP
+        if cmd == "connect":
+            return self._connect()
         if cmd in ("campaign", "new"):
             return self._campaign(rest)
         if cmd in ("show", "drafts", "review"):
@@ -82,6 +86,13 @@ class ChatSession:
         return None
 
     # ── commands ──────────────────────────────────────────────────────────────
+    def _connect(self) -> str:
+        base = get_settings().public_base_url.rstrip("/")
+        return (
+            "Connecte ton Outlook (un clic, ~30 s) puis reviens : "
+            f"{base}/oauth/outlook/start?tenant={self.tenant}"
+        )
+
     def _campaign(self, rest: str) -> str:
         name, _, path = rest.partition(" from ")
         name, path = name.strip(), path.strip()

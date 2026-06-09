@@ -48,6 +48,39 @@ def acquire_token_silent() -> str:
     raise ChannelError("No cached Graph token — run `azul auth-email` first")
 
 
+def _public_app() -> msal.PublicClientApplication:
+    s = get_settings()
+    if not s.graph_client_id:
+        raise ConfigError("GRAPH_CLIENT_ID is required for the Outlook OAuth flow")
+    return msal.PublicClientApplication(s.graph_client_id, authority=s.graph_authority)
+
+
+def authorization_url(state: str) -> str:
+    """Microsoft consent URL to send into the chat. `state` carries the tenant."""
+    return _public_app().get_authorization_request_url(
+        SCOPES, state=state, redirect_uri=get_settings().graph_redirect_uri
+    )
+
+
+def exchange_code(code: str) -> tuple[str, str | None]:
+    """Exchange the callback `code` for (refresh_token, account_email)."""
+    result = _public_app().acquire_token_by_authorization_code(
+        code, scopes=SCOPES, redirect_uri=get_settings().graph_redirect_uri
+    )
+    if "refresh_token" not in result:
+        raise ChannelError(f"OAuth exchange failed: {result.get('error_description', result)}")
+    email = (result.get("id_token_claims") or {}).get("preferred_username")
+    return str(result["refresh_token"]), email
+
+
+def token_from_refresh(refresh_token: str) -> str:
+    """Mint an access token from a stored per-tenant refresh token."""
+    result = _public_app().acquire_token_by_refresh_token(refresh_token, SCOPES)
+    if "access_token" not in result:
+        raise ChannelError(f"Token refresh failed: {result.get('error_description', result)}")
+    return str(result["access_token"])
+
+
 def device_code_login() -> str:
     """Interactive one-time consent. Prints a URL + code; blocks until completed."""
     app, cache, path = _build_app()

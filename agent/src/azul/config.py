@@ -65,6 +65,9 @@ class Settings(BaseSettings):
     # Operator chat channel — manage Azul like an employee (Telegram now, WhatsApp next)
     telegram_bot_token: str | None = None
 
+    # Public base URL of the agent worker (to build OAuth links sent into chat)
+    public_base_url: str = "http://localhost:8000"
+
     # Deliverability — pace sends, never spray
     send_min_delay_seconds: int = 45
     send_max_delay_seconds: int = 180
@@ -76,6 +79,10 @@ class Settings(BaseSettings):
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
+
+    @property
+    def graph_redirect_uri(self) -> str:
+        return f"{self.public_base_url.rstrip('/')}/oauth/outlook/callback"
 
 
 @lru_cache(maxsize=1)

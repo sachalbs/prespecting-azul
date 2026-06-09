@@ -11,12 +11,16 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from azul.config import get_settings
 from azul.connectors import get_channel
+from azul.connectors.accounts import store_outlook_account
+from azul.connectors.graph_auth import authorization_url, exchange_code
 from azul.db.session import session_scope
 from azul.logging import configure_logging, get_logger
 from azul.memory import EpisodicMemory
+from azul.orchestrator.campaign import ensure_tenant
 
 log = get_logger(__name__)
 
@@ -28,12 +32,32 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
 
-app = FastAPI(title="Azul webhooks", lifespan=lifespan)
+app = FastAPI(title="Azul API", lifespan=lifespan)
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/oauth/outlook/start")
+def oauth_outlook_start(tenant: str) -> RedirectResponse:
+    """Send the user to Microsoft consent; `state` carries their tenant."""
+    return RedirectResponse(authorization_url(state=tenant))
+
+
+@app.get("/oauth/outlook/callback", response_class=HTMLResponse)
+def oauth_outlook_callback(code: str, state: str) -> str:
+    """Store the tenant's Outlook refresh token, then send them back to chat."""
+    refresh_token, email = exchange_code(code)
+    with session_scope() as session:
+        tenant = ensure_tenant(session, state)
+        store_outlook_account(session, tenant.id, refresh_token, email)
+    log.info("outlook_connected", tenant=state, email=email)
+    return (
+        "<h2>Outlook connecté ✅</h2>"
+        "<p>Reviens sur ton chat Azul — ton essai peut commencer.</p>"
+    )
 
 
 @app.post("/webhooks/replies")
