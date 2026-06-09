@@ -301,9 +301,19 @@
   50% { transform: translateY(-14px) rotate(2.5deg); }
 }
 
+/* Cursor trail is a pointer affordance: hide it on touch / no-hover devices. */
+@media (hover: none), (pointer: coarse) {
+  .cursor-trail {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .cursor-trail {
+    display: none;
   }
   .reveal,
   .rise,
