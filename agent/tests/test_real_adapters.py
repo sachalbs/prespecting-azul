@@ -154,3 +154,32 @@ def test_interpret_returns_none_without_writer() -> None:
     from azul.cli.intent import interpret
 
     assert interpret("n'importe quoi") is None  # stub mode: no openai_compat writer
+
+
+# ── Writer over an OpenAI-compatible API (e.g. Mistral) ─────────────────────
+
+
+def test_openai_compat_writer_parses_a_draft() -> None:
+    from azul.domain import ProspectBrief
+    from azul.writing.base import DraftRequest
+    from azul.writing.openai_compat import OpenAICompatWriter
+
+    content = '{"subject":"quick one","body":"Hi Ann, saw the raise.","angle":"funding"}'
+    payload = {"choices": [{"message": {"content": content}}]}
+    with (
+        env(
+            WRITER_PROVIDER="openai_compat",
+            WRITER_BASE_URL="https://api.mistral.ai/v1",
+            WRITER_MODEL="mistral-large-latest",
+            WRITER_API_KEY="k",
+        ),
+        respx.mock(base_url="https://api.mistral.ai/v1") as router,
+    ):
+        router.post("/chat/completions").mock(return_value=httpx.Response(200, json=payload))
+        draft = OpenAICompatWriter().write(
+            DraftRequest(
+                prospect=ProspectBrief(email="a@b.com", full_name="Ann Lee"), hook="funding"
+            )
+        )
+    assert draft.subject == "quick one"
+    assert draft.angle == "funding"
