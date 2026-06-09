@@ -23,6 +23,24 @@ def test_stub_research_returns_a_hook() -> None:
     assert result.top_hook
 
 
+def test_dossier_research_builds_hook_from_prospeo_dossier() -> None:
+    from azul.research.dossier import DossierResearchEngine
+
+    brief = ProspectBrief(
+        email="a@b.com",
+        company="Acme",
+        signals={
+            "dossier": {
+                "latest_funding": {"stage": "Series B", "amount_printed": "$20M"},
+                "active_job_titles": ["Account Executive"],
+            }
+        },
+    )
+    result = DossierResearchEngine().research(brief)
+    assert result.top_hook
+    assert any("Series B" in h.text for h in result.hooks)
+
+
 def test_stub_writer_personalises_on_name_and_hook() -> None:
     draft = get_writer().write(
         DraftRequest(

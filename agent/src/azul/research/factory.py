@@ -13,4 +13,8 @@ def get_research_engine() -> ResearchEngine:
         from azul.research.holo3 import Holo3ResearchEngine
 
         return Holo3ResearchEngine()
+    if name == "dossier":
+        from azul.research.dossier import DossierResearchEngine
+
+        return DossierResearchEngine()
     return StubResearchEngine()
