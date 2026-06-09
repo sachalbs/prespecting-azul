@@ -76,7 +76,7 @@ const dict = {
         },
         {
           title: "Writing",
-          desc: "A personal, referenced message, tuned to your offer and your tone. Never robotic.",
+          desc: "A personal, referenced message, tuned to your offer and your tone.",
         },
         {
           title: "Send & learn",
@@ -172,7 +172,7 @@ const dict = {
         },
         {
           title: "Rédaction",
-          desc: "Un message personnel et référencé, calé sur votre offre et votre ton. Jamais robot.",
+          desc: "Un message personnel et référencé, calé sur votre offre et votre ton.",
         },
         {
           title: "Envoi & apprentissage",
