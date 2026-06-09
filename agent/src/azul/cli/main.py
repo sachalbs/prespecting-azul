@@ -255,5 +255,13 @@ def chat() -> None:
     run_chat()
 
 
+@app.command("telegram-bot")
+def telegram_bot() -> None:
+    """Run Azul's Telegram operator bot (long-poll) — the chat surface over Telegram."""
+    from azul.chatops.telegram import TelegramBot
+
+    TelegramBot().poll()
+
+
 if __name__ == "__main__":
     app()

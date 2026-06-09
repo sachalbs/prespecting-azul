@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     graph_token_cache: str = ".msal_cache.bin"
     webhook_secret: str | None = None
 
+    # Operator chat channel — manage Azul like an employee (Telegram now, WhatsApp next)
+    telegram_bot_token: str | None = None
+
     # Deliverability — pace sends, never spray
     send_min_delay_seconds: int = 45
     send_max_delay_seconds: int = 180
