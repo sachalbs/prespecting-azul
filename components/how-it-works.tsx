@@ -1,14 +1,8 @@
 "use client";
 
 import { Reveal } from "./reveal";
-import { Search, Pen, Loop } from "./icons";
+import { StepVisual } from "./step-visuals";
 import { useLang } from "./lang-provider";
-
-const icons = [
-  <Search key="s" className="h-5 w-5" />,
-  <Pen key="p" className="h-5 w-5" />,
-  <Loop key="l" className="h-5 w-5" />,
-];
 
 export function HowItWorks() {
   const { t } = useLang();
@@ -19,7 +13,8 @@ export function HowItWorks() {
           <span className="text-cobalt">02</span> / {t.how.tag}
         </span>
         <h2 className="mt-5 text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
-          {t.how.h}
+          {t.how.hPre}
+          <span className="text-cobalt">{t.how.hAccent}</span>
         </h2>
       </Reveal>
 
@@ -31,9 +26,7 @@ export function HowItWorks() {
                 <span className="font-display text-[2.5rem] font-black leading-none text-cobalt">
                   {`0${i + 1}`}
                 </span>
-                <span className="flex h-10 w-10 items-center justify-center border border-ink/15 text-ink">
-                  {icons[i]}
-                </span>
+                <StepVisual index={i} />
               </div>
               <h3 className="mt-7 font-display text-[1.3rem] font-bold tracking-[-0.01em] text-ink">
                 {step.title}

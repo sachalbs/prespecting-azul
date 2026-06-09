@@ -67,7 +67,8 @@ const dict = {
     },
     how: {
       tag: "The process",
-      h: "From research to reply, in three steps.",
+      hPre: "From research to reply, in ",
+      hAccent: "three steps.",
       steps: [
         {
           title: "Research",
@@ -162,7 +163,8 @@ const dict = {
     },
     how: {
       tag: "Le process",
-      h: "De la recherche à la réponse, en trois temps.",
+      hPre: "De la recherche à la réponse, en ",
+      hAccent: "trois temps.",
       steps: [
         {
           title: "Recherche",
