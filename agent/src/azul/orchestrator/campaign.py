@@ -30,6 +30,7 @@ from azul.db.models import (
     Research,
     Tenant,
 )
+from azul.discovery import get_discoverer
 from azul.domain import ProspectBrief
 from azul.enums import (
     CampaignStatus,
@@ -240,21 +241,16 @@ def _set_membership(session: Session, message: Message, status: MembershipStatus
 # ── run: source -> research -> write (drafts await human approval) ──────────
 
 
-def run_campaign(
+def _process_rows(
     session: Session,
-    *,
-    tenant_slug: str,
-    name: str,
+    campaign: Campaign,
+    tenant: Tenant,
     rows: list[CsvRow],
-    tenant_name: str | None = None,
-    sender_name: str | None = None,
-    value_prop: str | None = None,
-) -> Campaign:
-    tenant = ensure_tenant(session, tenant_slug, tenant_name)
-    campaign = Campaign(tenant_id=tenant.id, name=name, status=CampaignStatus.RUNNING)
-    session.add(campaign)
-    session.flush()
-
+    *,
+    sender_name: str | None,
+    value_prop: str | None,
+) -> None:
+    """Per-prospect pipeline (verify/find email -> research -> write) into drafts."""
     pipeline = build_pipeline()
     procedural = ProceduralMemory(session)
     episodic = EpisodicMemory(session)
@@ -309,8 +305,10 @@ def run_campaign(
             continue
 
         dedup_key = f"{tenant.id}:{prospect.id}:1"
-        existing = session.scalars(select(Message).where(Message.dedup_key == dedup_key)).first()
-        if existing is None:
+        existing_msg = session.scalars(
+            select(Message).where(Message.dedup_key == dedup_key)
+        ).first()
+        if existing_msg is None:
             session.add(
                 Message(
                     tenant_id=tenant.id,
@@ -328,9 +326,86 @@ def run_campaign(
         membership.status = MembershipStatus.DRAFTED
         log.info("draft_ready", email=prospect.email, angle=draft.angle)
 
+
+def run_campaign(
+    session: Session,
+    *,
+    tenant_slug: str,
+    name: str,
+    rows: list[CsvRow],
+    tenant_name: str | None = None,
+    sender_name: str | None = None,
+    value_prop: str | None = None,
+) -> Campaign:
+    """CSV flow: process a provided list straight to drafts."""
+    tenant = ensure_tenant(session, tenant_slug, tenant_name)
+    campaign = Campaign(tenant_id=tenant.id, name=name, status=CampaignStatus.RUNNING)
+    session.add(campaign)
+    session.flush()
+    _process_rows(session, campaign, tenant, rows, sender_name=sender_name, value_prop=value_prop)
     campaign.status = CampaignStatus.AWAITING_APPROVAL
     session.flush()
     return campaign
+
+
+# ── discovery flow: ICP brief -> leads -> (human approves list) -> drafts ────
+
+
+def discover_campaign(
+    session: Session,
+    *,
+    tenant_slug: str,
+    name: str,
+    icp_brief: str,
+    limit: int = 25,
+    tenant_name: str | None = None,
+) -> Campaign:
+    """Discover candidate leads from an ICP brief; they await human list approval."""
+    tenant = ensure_tenant(session, tenant_slug, tenant_name)
+    campaign = Campaign(tenant_id=tenant.id, name=name, status=CampaignStatus.DISCOVERED)
+    leads = get_discoverer().discover(icp_brief, limit=limit)
+    campaign.leads = [lead.as_row() for lead in leads]
+    session.add(campaign)
+    session.flush()
+    log.info("campaign_discovered", campaign_id=str(campaign.id), leads=len(leads))
+    return campaign
+
+
+def list_leads(session: Session, campaign_id: uuid.UUID) -> list[dict[str, object]]:
+    campaign = session.get(Campaign, campaign_id)
+    return list(campaign.leads) if campaign else []
+
+
+def approve_list(
+    session: Session,
+    *,
+    campaign_id: uuid.UUID,
+    sender_name: str | None = None,
+    value_prop: str | None = None,
+) -> int:
+    """Approve the discovered list -> run the pipeline on it (find email, research, write)."""
+    campaign = session.get(Campaign, campaign_id)
+    if campaign is None:
+        raise AzulError(f"Campaign not found: {campaign_id}")
+    tenant = session.get(Tenant, campaign.tenant_id)
+    if tenant is None:
+        raise AzulError("Campaign has no tenant")
+    rows = [
+        CsvRow(
+            email="",
+            full_name=lead.get("full_name") or None,
+            title=lead.get("title") or None,
+            company=lead.get("company") or None,
+            company_domain=lead.get("company_domain") or None,
+            signals={"source_url": lead["source_url"]} if lead.get("source_url") else {},
+        )
+        for lead in (campaign.leads or [])
+    ]
+    campaign.status = CampaignStatus.RUNNING
+    _process_rows(session, campaign, tenant, rows, sender_name=sender_name, value_prop=value_prop)
+    campaign.status = CampaignStatus.AWAITING_APPROVAL
+    session.flush()
+    return len(list_drafts(session, campaign_id))
 
 
 # ── approve (the human tap) ─────────────────────────────────────────────────

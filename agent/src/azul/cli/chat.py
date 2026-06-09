@@ -19,7 +19,10 @@ from azul.orchestrator import campaign as camp
 HELP = """\
 I'm Azul. Manage me like an SDR. Commands:
   connect                           connect your Outlook (one click) — sends go from your box
-  campaign <name> from <file.csv>   start a campaign (source -> research -> draft)
+  discover <ICP brief>              find prospects from a description (then `list`, `approve-list`)
+  list                              show the discovered leads
+  approve-list                      validate the list -> find emails + write drafts
+  campaign <name> from <file.csv>   start from a CSV instead (source -> research -> draft)
   show                              show the drafts waiting for your approval
   approve all | approve 1 3         approve drafts (numbers from `show`)
   edit <n> <new body>               replace a draft's body (your edit is logged)
@@ -61,6 +64,12 @@ class ChatSession:
             return HELP
         if cmd == "connect":
             return self._connect()
+        if cmd == "discover":
+            return self._discover(rest)
+        if cmd in ("list", "leads", "show-list"):
+            return self._list_leads()
+        if cmd in ("approve-list", "go-list"):
+            return self._approve_list()
         if cmd in ("campaign", "new"):
             return self._campaign(rest)
         if cmd in ("show", "drafts", "review"):
@@ -92,6 +101,36 @@ class ChatSession:
             "Connecte ton Outlook (un clic, ~30 s) puis reviens : "
             f"{base}/oauth/outlook/start?tenant={self.tenant}"
         )
+
+    def _discover(self, rest: str) -> str:
+        if not rest:
+            return "Usage: discover <brief ICP> (ex: fondateurs d'agences growth FR, 5-30)"
+        with session_scope() as s:
+            c = camp.discover_campaign(s, tenant_slug=self.tenant, name=rest[:60], icp_brief=rest)
+            self.campaign_id = c.id
+            n = len(camp.list_leads(s, c.id))
+        return f"Trouvé {n} leads. `list` pour voir, `approve-list` pour la suite."
+
+    def _list_leads(self) -> str:
+        if self.campaign_id is None:
+            return "Lance d'abord `discover <brief ICP>`."
+        with session_scope() as s:
+            leads = camp.list_leads(s, self.campaign_id)
+        if not leads:
+            return "Aucun lead découvert."
+        lines = [
+            f"[{i}] {ld.get('full_name')} — {ld.get('company') or '-'} "
+            f"({ld.get('company_domain') or '-'})"
+            for i, ld in enumerate(leads, 1)
+        ]
+        return "\n".join(lines) + "\n\n`approve-list` → emails + messages."
+
+    def _approve_list(self) -> str:
+        if self.campaign_id is None:
+            return "Lance d'abord `discover <brief ICP>`."
+        with session_scope() as s:
+            n = camp.approve_list(s, campaign_id=self.campaign_id, sender_name=self.sender)
+        return f"Liste validée → {n} brouillon(s) prêts. `show` pour relire, puis `approve`/`send`."
 
     def _campaign(self, rest: str) -> str:
         name, _, path = rest.partition(" from ")

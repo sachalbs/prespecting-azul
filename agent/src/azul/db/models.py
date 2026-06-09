@@ -57,6 +57,8 @@ class Campaign(UUIDMixin, TimestampMixin, Base):
     status: Mapped[CampaignStatus] = mapped_column(
         _enum(CampaignStatus), default=CampaignStatus.DRAFT
     )
+    # Discovered leads awaiting list approval (ICP-brief flow): [{full_name, company, …}]
+    leads: Mapped[list[dict[str, Any]]] = mapped_column(default=list)
 
     tenant: Mapped[Tenant] = relationship(back_populates="campaigns")
     members: Mapped[list[CampaignProspect]] = relationship(back_populates="campaign")

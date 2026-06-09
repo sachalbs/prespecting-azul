@@ -18,6 +18,9 @@ log = get_logger(__name__)
 
 COMMANDS = (
     "connect",
+    "discover",
+    "list",
+    "approve-list",
     "campaign",
     "show",
     "approve",

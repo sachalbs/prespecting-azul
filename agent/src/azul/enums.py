@@ -23,6 +23,7 @@ class Channel(StrEnum):
 
 class CampaignStatus(StrEnum):
     DRAFT = "draft"
+    DISCOVERED = "discovered"  # leads found, awaiting human list approval
     RUNNING = "running"
     AWAITING_APPROVAL = "awaiting_approval"
     SENDING = "sending"

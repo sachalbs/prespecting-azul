@@ -8,6 +8,7 @@ from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+DiscoveryProvider = Literal["stub", "websearch"]
 SourcingProvider = Literal["stub", "prospeo", "waterfall"]
 ResearchEngineName = Literal["stub", "dossier", "holo3"]
 WriterProvider = Literal["stub", "openai_compat"]
@@ -28,10 +29,15 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///azul.db"
 
     # Which adapter backs each interface (stub today, live once keys land)
+    discovery_provider: DiscoveryProvider = "stub"
     sourcing_provider: SourcingProvider = "stub"
     research_engine: ResearchEngineName = "stub"
     writer_provider: WriterProvider = "stub"
     channel: ChannelName = "stub"
+
+    # Discovery (web search → leads). Provider TBD (Brave/Serper/Bing) via these.
+    search_api_key: str | None = None
+    search_api_url: str | None = None
 
     # Sourcing (Prospeo enrich = find + verify + dossier; Hunter/Dropcontact optional)
     prospeo_api_key: str | None = None
