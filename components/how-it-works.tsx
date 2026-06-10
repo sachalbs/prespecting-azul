@@ -10,9 +10,10 @@ export function HowItWorks() {
     <section id="how" className="shell py-20 sm:py-28">
       <Reveal className="max-w-3xl">
         <span className="label">
-          <span className="text-cobalt">02</span> / {t.how.tag}
+          <span className="sq" />
+          {t.how.tag}
         </span>
-        <h2 className="mt-5 text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
+        <h2 className="mt-5 text-balance text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
           {t.how.hPre}
           <span className="text-cobalt">{t.how.hAccent}</span>
         </h2>

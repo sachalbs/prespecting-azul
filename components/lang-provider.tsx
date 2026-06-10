@@ -84,6 +84,25 @@ const dict = {
         },
       ],
     },
+    manage: {
+      tag: "How you run it",
+      hPre: "No dashboard. You manage Azul in ",
+      hAccent: "chat.",
+      sub: "Brief it like a new rep. It researches, drafts, and waits for your approval. You answer in Slack, WhatsApp, or Teams, the way you already work.",
+      role: "Your autonomous rep",
+      you: "You",
+      points: [
+        "Brief it in plain language, no setup screens.",
+        "Approve or edit every first message before it sends.",
+        "Replies and follow-ups come back in the same thread.",
+      ],
+      thread: [
+        { from: "you", text: "Azul, target 25 Heads of Sales at Series-A SaaS. Angle: our onboarding cuts ramp time." },
+        { from: "azul", text: "On it. I’ll research the 25 and send the first 5 drafts for your approval before anything goes out." },
+        { from: "you", text: "Approved. Send." },
+        { from: "azul", text: "Sent. I’ll log every reply here and follow up the quiet ones in 4 days." },
+      ],
+    },
     waitlist: {
       tag: "Early access",
       h: "Join the waitlist.",
@@ -178,6 +197,25 @@ const dict = {
           title: "Envoi & apprentissage",
           desc: "Vous validez les premiers, il calibre le reste, envoie et s’améliore campagne après campagne.",
         },
+      ],
+    },
+    manage: {
+      tag: "Comment vous le pilotez",
+      hPre: "Pas de dashboard. Vous pilotez Azul en ",
+      hAccent: "conversation.",
+      sub: "Briefez-le comme un nouveau commercial. Il étudie, rédige, et attend votre validation. Vous répondez dans Slack, WhatsApp ou Teams, comme vous travaillez déjà.",
+      role: "Votre commercial autonome",
+      you: "Vous",
+      points: [
+        "Un brief en langage normal, aucun écran de configuration.",
+        "Vous validez ou modifiez chaque premier message avant l’envoi.",
+        "Réponses et relances reviennent dans le même fil.",
+      ],
+      thread: [
+        { from: "you", text: "Azul, vise 25 Head of Sales en SaaS Série A. Angle : notre onboarding réduit le temps de rampe." },
+        { from: "azul", text: "C’est parti. J’étudie les 25 et je vous envoie les 5 premiers brouillons à valider avant tout envoi." },
+        { from: "you", text: "Validé. Envoie." },
+        { from: "azul", text: "Envoyé. Je consigne chaque réponse ici et je relance les silencieux dans 4 jours." },
       ],
     },
     waitlist: {

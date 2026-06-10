@@ -1,7 +1,7 @@
 import type { SVGProps } from "react";
 
 // Sober, "spec-sheet" illustrations for the three steps: monochrome ink line-art
-// with a single cobalt accent, framed on a faint blueprint-grid tile. Native —
+// with a single cobalt accent, framed on a faint blueprint-grid tile. Native,
 // no external assets.
 
 const wrap = {
@@ -14,7 +14,7 @@ const wrap = {
   "aria-hidden": true,
 };
 
-// 01 — Research: a radar sweep that locks onto a cobalt signal.
+// 01:Research: a radar sweep that locks onto a cobalt signal.
 function Radar(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...wrap} {...props}>
@@ -29,7 +29,7 @@ function Radar(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// 02 — Writing: a draft with a highlighted line and a cobalt cursor.
+// 02:Writing: a draft with a highlighted line and a cobalt cursor.
 function Draft(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...wrap} {...props}>
@@ -43,7 +43,7 @@ function Draft(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// 03 — Send & learn: an outbound signal that broadcasts and iterates.
+// 03:Send & learn: an outbound signal that broadcasts and iterates.
 function Broadcast(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...wrap} {...props}>

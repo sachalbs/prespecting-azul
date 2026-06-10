@@ -26,6 +26,16 @@
     background: theme("colors.cobalt.600");
     color: white;
   }
+
+  /* Even line breaks on headings, fewer orphans in prose. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
 }
 
 @layer components {
@@ -62,6 +72,11 @@
   .btn:disabled {
     transform: none;
     box-shadow: 5px 5px 0 0 theme("colors.ink");
+  }
+  /* Keyboard focus must stay visible (the @apply above clears the default). */
+  .btn:focus-visible {
+    outline: 3px solid theme("colors.ink");
+    outline-offset: 3px;
   }
 
   .btn-outline {

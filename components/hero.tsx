@@ -53,6 +53,10 @@ export function Hero() {
         >
           <span>
             <span className="text-ink">azul</span> {t.hero.sysPost}
+            <span
+              aria-hidden
+              className="ml-1.5 inline-block h-[0.78em] w-[7px] translate-y-[0.08em] animate-blink bg-cobalt align-baseline"
+            />
           </span>
         </div>
 

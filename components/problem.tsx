@@ -11,7 +11,8 @@ export function Problem() {
     <section id="problem" className="shell py-20 sm:py-28">
       <Reveal className="max-w-3xl">
         <span className="label">
-          <span className="text-cobalt">01</span> / {t.problem.tag}
+          <span className="sq" />
+          {t.problem.tag}
         </span>
         <h2 className="mt-5 text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
           {t.problem.hPre}{" "}

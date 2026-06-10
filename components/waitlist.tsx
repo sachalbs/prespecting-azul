@@ -14,7 +14,8 @@ export function Waitlist() {
           {/* copy */}
           <div>
             <span className="label">
-              <span className="text-cobalt">03</span> / {t.waitlist.tag}
+              <span className="sq" />
+              {t.waitlist.tag}
             </span>
             <h2 className="mt-5 display text-[clamp(2rem,5vw,3.4rem)] text-ink">
               {t.waitlist.h}
