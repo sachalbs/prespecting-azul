@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { AzulTile } from "./wordmark";
 import { SlackMark, WhatsAppMark, TeamsMark, Check } from "./icons";
 import { Reveal } from "./reveal";
@@ -8,6 +9,25 @@ import { useLang } from "./lang-provider";
 export function Manage() {
   const { t } = useLang();
   const m = t.manage;
+  const threadRef = useRef<HTMLDivElement>(null);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const el = threadRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setPlaying(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.3 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
     <section id="manage" className="border-t border-line bg-panel">
       <div className="shell grid gap-12 py-20 sm:py-28 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-16">
@@ -54,10 +74,14 @@ export function Manage() {
             </div>
 
             {/* thread */}
-            <div className="flex flex-col gap-4 px-5 py-5">
-              {m.thread.map((msg, i) =>
-                msg.from === "you" ? (
-                  <div key={i} className="flex flex-col items-end">
+            <div
+              ref={threadRef}
+              className={`flex flex-col gap-4 px-5 py-5 ${playing ? "thread-playing" : ""}`}
+            >
+              {m.thread.map((msg, i) => {
+                const delay = { "--i": `${0.12 + i * 0.13}s` } as CSSProperties;
+                return msg.from === "you" ? (
+                  <div key={i} className="thread-msg flex flex-col items-end" style={delay}>
                     <span className="mb-1 font-mono text-[0.58rem] uppercase tracking-label text-muted">
                       {m.you}
                     </span>
@@ -66,7 +90,7 @@ export function Manage() {
                     </p>
                   </div>
                 ) : (
-                  <div key={i} className="flex flex-col items-start">
+                  <div key={i} className="thread-msg flex flex-col items-start" style={delay}>
                     <span className="mb-1 inline-flex items-center gap-1.5 font-mono text-[0.58rem] uppercase tracking-label text-cobalt">
                       <span className="sq" />
                       Azul
@@ -75,8 +99,8 @@ export function Manage() {
                       {msg.text}
                     </p>
                   </div>
-                ),
-              )}
+                );
+              })}
             </div>
           </div>
         </Reveal>

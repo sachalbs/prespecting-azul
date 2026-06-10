@@ -4,6 +4,7 @@ import { Hero } from "@/components/hero";
 import { Problem } from "@/components/problem";
 import { HowItWorks } from "@/components/how-it-works";
 import { Manage } from "@/components/manage";
+import { Faq } from "@/components/faq";
 import { Waitlist } from "@/components/waitlist";
 import { SiteFooter } from "@/components/site-footer";
 import CursorTrail from "@/components/cursor-trail";
@@ -18,6 +19,7 @@ export default function Home() {
         <Problem />
         <HowItWorks />
         <Manage />
+        <Faq />
         <Waitlist />
       </main>
       <SiteFooter />

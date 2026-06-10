@@ -103,6 +103,33 @@ const dict = {
         { from: "azul", text: "Sent. I’ll log every reply here and follow up the quiet ones in 4 days." },
       ],
     },
+    faq: {
+      tag: "Questions",
+      hPre: "Straight answers, ",
+      hAccent: "no spin.",
+      items: [
+        {
+          q: "How is this different from other AI SDR tools?",
+          a: "Most optimize for volume: more sends, thinner personalization. Azul optimizes for replies. It researches each prospect and writes one message worth answering, and you approve the first ones before anything goes out.",
+        },
+        {
+          q: "Do I stay in control of what gets sent?",
+          a: "Yes. Azul drafts, you approve or edit every first message. Nothing leaves in your name without your go, and you steer it from Slack, WhatsApp, or Teams.",
+        },
+        {
+          q: "Which channels does it use?",
+          a: "It reaches prospects by email and LinkedIn. You run it from chat, so there is no separate dashboard to learn.",
+        },
+        {
+          q: "What about my domain reputation?",
+          a: "Azul writes in your name, so reputation matters. That is the point of favoring replies over volume: fewer, sharper messages keep your domain healthy.",
+        },
+        {
+          q: "When can I start?",
+          a: "Azul is in early access. We onboard in small waves, in signup order. Join the waitlist and we will email you when a wave opens.",
+        },
+      ],
+    },
     waitlist: {
       tag: "Early access",
       h: "Join the waitlist.",
@@ -121,6 +148,8 @@ const dict = {
     },
     footer: {
       tagline: "The autonomous rep that gets your prospects to reply.",
+      status: "Early access, onboarding in waves",
+      channels: "Email + LinkedIn · Slack / WhatsApp / Teams",
       problem: "The problem",
       waitlist: "Waitlist",
       rights: "Early access",
@@ -218,6 +247,33 @@ const dict = {
         { from: "azul", text: "Envoyé. Je consigne chaque réponse ici et je relance les silencieux dans 4 jours." },
       ],
     },
+    faq: {
+      tag: "Questions",
+      hPre: "Des réponses claires, ",
+      hAccent: "sans détour.",
+      items: [
+        {
+          q: "En quoi est-ce différent des autres SDR IA ?",
+          a: "La plupart optimisent le volume : plus d’envois, moins de personnalisation. Azul optimise les réponses. Il étudie chaque prospect et écrit un message qui mérite une réponse, et vous validez les premiers avant tout envoi.",
+        },
+        {
+          q: "Est-ce que je garde le contrôle des envois ?",
+          a: "Oui. Azul rédige, vous validez ou modifiez chaque premier message. Rien ne part en votre nom sans votre feu vert, et vous le pilotez depuis Slack, WhatsApp ou Teams.",
+        },
+        {
+          q: "Quels canaux utilise-t-il ?",
+          a: "Il contacte les prospects par email et LinkedIn. Vous le pilotez en conversation, sans dashboard à apprendre.",
+        },
+        {
+          q: "Et la réputation de mon domaine ?",
+          a: "Azul écrit en votre nom, donc la réputation compte. C’est tout l’intérêt de privilégier les réponses au volume : des messages moins nombreux et plus justes gardent votre domaine sain.",
+        },
+        {
+          q: "Quand puis-je commencer ?",
+          a: "Azul est en accès anticipé. On onboarde par petites vagues, dans l’ordre d’inscription. Rejoignez la liste et on vous écrit dès qu’une vague s’ouvre.",
+        },
+      ],
+    },
     waitlist: {
       tag: "Accès anticipé",
       h: "Rejoignez la liste d’attente.",
@@ -236,6 +292,8 @@ const dict = {
     },
     footer: {
       tagline: "Le commercial autonome qui fait répondre vos prospects.",
+      status: "Accès anticipé, onboarding par vagues",
+      channels: "Email + LinkedIn · Slack / WhatsApp / Teams",
       problem: "Le problème",
       waitlist: "Liste d’attente",
       rights: "Accès anticipé",

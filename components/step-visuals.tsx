@@ -23,8 +23,9 @@ function Radar(props: SVGProps<SVGSVGElement>) {
         <circle cx="23" cy="25" r="8.5" />
         <path d="M23 6v4M23 40v4M4 25h4M38 25h4" />
       </g>
+      <circle cx="23" cy="25" r="8.5" className="anim-ping stroke-cobalt" />
       <path d="M23 25 34 14" className="stroke-cobalt" />
-      <circle cx="34" cy="14" r="2.8" className="fill-cobalt" stroke="none" />
+      <circle cx="34" cy="14" r="2.8" className="anim-blip fill-cobalt" stroke="none" />
     </svg>
   );
 }
@@ -37,7 +38,7 @@ function Draft(props: SVGProps<SVGSVGElement>) {
         <rect x="10" y="8" width="28" height="32" rx="2" />
         <path d="M16 25h16M16 31h16M16 37h9" />
       </g>
-      <path d="M16 18h13" className="stroke-cobalt" />
+      <path d="M16 18h13" className="anim-blip stroke-cobalt" />
       <path d="M30 34v6" className="stroke-cobalt" />
     </svg>
   );
@@ -47,10 +48,8 @@ function Draft(props: SVGProps<SVGSVGElement>) {
 function Broadcast(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...wrap} {...props}>
-      <g opacity="0.5">
-        <path d="M21 16a13 13 0 0 1 0 18" />
-        <path d="M16 20a7 7 0 0 1 0 10" />
-      </g>
+      <path d="M21 16a13 13 0 0 1 0 18" className="anim-wave" opacity="0.4" />
+      <path d="M16 20a7 7 0 0 1 0 10" className="anim-wave-2" opacity="0.4" />
       <circle cx="12" cy="25" r="2.8" className="fill-cobalt" stroke="none" />
       <path d="M27 25h9" className="stroke-cobalt" />
       <path d="M32 20l5 5-5 5" className="stroke-cobalt" />

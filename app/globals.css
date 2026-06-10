@@ -316,6 +316,62 @@
   50% { transform: translateY(-14px) rotate(2.5deg); }
 }
 
+/* FAQ accordion: hide the native marker; the plus rotates into a cross. */
+.faq-summary::-webkit-details-marker {
+  display: none;
+}
+details[open] > .faq-summary .faq-icon {
+  transform: rotate(45deg);
+}
+
+/* Chat thread: messages stay visible by default and stagger in when played. */
+.thread-msg {
+  opacity: 1;
+}
+@keyframes msgIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Spec-sheet diagrams come alive: a radar ping, a draft pulse, emitting waves. */
+@keyframes stepPing {
+  0% { transform: scale(0.45); opacity: 0.6; }
+  75%, 100% { transform: scale(1.5); opacity: 0; }
+}
+@keyframes stepBlip {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes stepWave {
+  0%, 100% { opacity: 0.22; }
+  50% { opacity: 0.62; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .thread-playing .thread-msg {
+    animation: msgIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: var(--i, 0ms);
+  }
+  .anim-ping {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: stepPing 2.6s ease-out infinite;
+  }
+  .anim-blip {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: stepBlip 2.6s ease-in-out infinite;
+  }
+  .anim-wave {
+    animation: stepWave 2.4s ease-in-out infinite;
+  }
+  .anim-wave-2 {
+    animation: stepWave 2.4s ease-in-out 0.35s infinite;
+  }
+}
+
 /* Cursor trail is a pointer affordance: hide it on touch / no-hover devices. */
 @media (hover: none), (pointer: coarse) {
   .cursor-trail {
