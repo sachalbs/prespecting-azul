@@ -16,6 +16,7 @@ from azul.enums import EmailStatus
 from azul.orchestrator.state import ProspectState
 from azul.research import ResearchEngine, get_research_engine
 from azul.sourcing import EmailVerifier, get_verifier
+from azul.sourcing.person_resolver import PersonResolver, get_person_resolver
 from azul.writing import DraftRequest, Writer, get_writer
 
 
@@ -24,11 +25,42 @@ def build_pipeline(
     verifier: EmailVerifier | None = None,
     research_engine: ResearchEngine | None = None,
     writer: Writer | None = None,
+    person_resolver: PersonResolver | None = None,
 ) -> Any:
     """Compile the pipeline once per run; nodes close over the chosen engines."""
     verifier = verifier or get_verifier()
     research_engine = research_engine or get_research_engine()
     writer = writer or get_writer()
+
+    # Lazy: the resolver only matters for prospects missing a founder name, and it
+    # needs TAVILY_API_KEY — never build it for a run that doesn't reach it.
+    resolver_box: list[PersonResolver | None] = [person_resolver]
+
+    def _resolver() -> PersonResolver:
+        if resolver_box[0] is None:
+            resolver_box[0] = get_person_resolver()
+        return resolver_box[0]
+
+    def resolve_node(state: ProspectState) -> dict[str, Any]:
+        brief = state["prospect"]
+        # A known name OR a real email is enough for the finder/verifier — only a
+        # company with neither needs the decision-maker looked up first.
+        if brief.full_name or brief.email:
+            return {"resolve_status": None}
+        person = _resolver().resolve(brief.company, brief.company_domain)
+        if not person.founder_name or person.confidence < 0.5:
+            return {"resolve_status": "no_founder", "resolve_confidence": person.confidence}
+        enriched = replace(
+            brief, full_name=person.founder_name, title=person.founder_role or brief.title
+        )
+        return {
+            "prospect": enriched,
+            "resolve_status": "resolved",
+            "resolve_confidence": person.confidence,
+        }
+
+    def route_after_resolve(state: ProspectState) -> str:
+        return "stop" if state.get("resolve_status") == "no_founder" else "verify"
 
     def verify_node(state: ProspectState) -> dict[str, Any]:
         brief = state["prospect"]
@@ -81,11 +113,13 @@ def build_pipeline(
         return {"draft": draft}
 
     graph = StateGraph(ProspectState)
+    graph.add_node("resolve", resolve_node)
     graph.add_node("verify", verify_node)
     graph.add_node("research", research_node)
     graph.add_node("write", write_node)
 
-    graph.add_edge(START, "verify")
+    graph.add_edge(START, "resolve")
+    graph.add_conditional_edges("resolve", route_after_resolve, {"verify": "verify", "stop": END})
     graph.add_conditional_edges("verify", route_after_verify, {"research": "research", "stop": END})
     graph.add_edge("research", "write")
     graph.add_edge("write", END)

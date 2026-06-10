@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     # In-house verifier: SMTP RCPT handshake (needs outbound port 25 — VPS only).
     # Off by default: syntax + MX checks still run, verdicts cap at UNKNOWN.
     verify_smtp: bool = False
+    # Resolve a company's founder before the finder runs: cap Tavily calls/prospect.
+    person_resolve_max_searches: int = 3
 
     # Research — Tavily (tier 1: search + extract, no browser)
     tavily_api_key: str | None = None

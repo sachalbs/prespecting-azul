@@ -282,6 +282,23 @@ def _process_rows(
                 _ensure_membership(session, campaign, failed).status = MembershipStatus.FAILED
             continue
 
+        # No decision-maker found for the company: skip with an explicit, distinct
+        # reason (not no_email_found). Persist it so the skip is visible.
+        if state.get("resolve_status") == "no_founder":
+            placeholder = row.email or (
+                f"contact@{row.company_domain}" if row.company_domain else ""
+            )
+            if placeholder:
+                skipped = _upsert_prospect(session, tenant, email=placeholder, row=row)
+                _ensure_membership(session, campaign, skipped).status = MembershipStatus.SKIPPED
+            log.info("prospect_skipped", reason="no_founder_found", company=row.company)
+            continue
+
+        # The resolver may have found a founder the CSV row didn't carry.
+        resolved_brief = state.get("prospect")
+        resolved_name = resolved_brief.full_name if resolved_brief else None
+        resolved_title = resolved_brief.title if resolved_brief else None
+
         email_status = state.get("email_status", EmailStatus.UNKNOWN)
         resolved_email = state.get("resolved_email") or row.email
         if not resolved_email:
@@ -291,6 +308,10 @@ def _process_rows(
         prospect = _upsert_prospect(
             session, tenant, email=resolved_email, row=row, dossier=state.get("dossier") or {}
         )
+        # Persist the resolved decision-maker on the prospect.
+        if resolved_name and not prospect.full_name:
+            prospect.full_name = resolved_name
+            prospect.title = resolved_title or prospect.title
         prospect.email_status = email_status
         prospect.verify_status = state.get("verify_status")
         prospect.verify_confidence = state.get("verify_confidence")
