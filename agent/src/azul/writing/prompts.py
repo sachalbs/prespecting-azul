@@ -36,6 +36,9 @@ Return STRICT JSON only, no prose, with exactly these keys:
   "subject": short, specific, not clickbait (email only; else "")
   "body": the message
   "angle": a 2-4 word label for the angle you took (for the learning log)
+  "hook_type": which kind of hook the message leads with — exactly one of
+    "incoherence_site" | "actu_entreprise" | "contenu_publie" | "offre_emploi"
+    | "avis_clients" | "autre"
 """
 
 

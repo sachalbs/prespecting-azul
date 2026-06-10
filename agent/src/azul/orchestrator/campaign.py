@@ -336,6 +336,9 @@ def _process_rows(
                     step=1,
                     channel=Channel.EMAIL,
                     angle=draft.angle,
+                    hook_type=draft.hook_type,
+                    subject_len=len(draft.subject or ""),
+                    word_count=len(draft.body.split()),
                     subject=draft.subject,
                     body=draft.body,
                     status=MessageStatus.DRAFT,
@@ -579,6 +582,7 @@ def generate_followups(
                 value_prop=value_prop,
             )
         )
+        subject = f"Re: {m.subject}" if m.subject else draft.subject
         session.add(
             Message(
                 tenant_id=m.tenant_id,
@@ -588,7 +592,10 @@ def generate_followups(
                 step=2,
                 channel=Channel.EMAIL,
                 angle=draft.angle,
-                subject=f"Re: {m.subject}" if m.subject else draft.subject,
+                hook_type=draft.hook_type,
+                subject_len=len(subject or ""),
+                word_count=len(draft.body.split()),
+                subject=subject,
                 body=draft.body,
                 status=MessageStatus.DRAFT,
                 dedup_key=dedup_key,

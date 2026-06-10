@@ -13,6 +13,7 @@ import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from azul.config import get_settings
+from azul.enums import HookType
 from azul.errors import ConfigError, WritingError
 from azul.logging import get_logger
 from azul.writing.base import Draft, DraftRequest, Writer
@@ -84,7 +85,13 @@ class OpenAICompatWriter(Writer):
         if not body:
             raise WritingError("Writer returned an empty body")
         subject = (parsed.get("subject") or "").strip() or None
-        return Draft(body=body, subject=subject, angle=parsed.get("angle"))
+        try:
+            hook_type = HookType(str(parsed.get("hook_type") or ""))
+        except ValueError:
+            hook_type = HookType.AUTRE  # taxonomy is closed; junk lands in "autre"
+        return Draft(
+            body=body, subject=subject, angle=parsed.get("angle"), hook_type=hook_type
+        )
 
     def write(self, request: DraftRequest) -> Draft:
         messages = build_messages(request)

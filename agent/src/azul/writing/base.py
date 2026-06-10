@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 from azul.domain import ProspectBrief
+from azul.enums import HookType
 
 
 @dataclass
@@ -31,6 +32,8 @@ class Draft:
     body: str
     subject: str | None = None
     angle: str | None = None
+    # Which taxonomy bucket the hook belongs to (learning log).
+    hook_type: HookType | None = None
 
 
 class Writer(ABC):

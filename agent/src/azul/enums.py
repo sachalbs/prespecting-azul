@@ -64,6 +64,17 @@ class ReviewDecision(StrEnum):
     REJECT = "reject"
 
 
+class HookType(StrEnum):
+    """Taxonomy of the hook a message leads with — the learning log's x-axis."""
+
+    INCOHERENCE_SITE = "incoherence_site"
+    ACTU_ENTREPRISE = "actu_entreprise"
+    CONTENU_PUBLIE = "contenu_publie"
+    OFFRE_EMPLOI = "offre_emploi"
+    AVIS_CLIENTS = "avis_clients"
+    AUTRE = "autre"
+
+
 class ReplySentiment(StrEnum):
     POSITIVE = "positive"
     NEUTRAL = "neutral"

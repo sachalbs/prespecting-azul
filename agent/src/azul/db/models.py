@@ -28,6 +28,7 @@ from azul.enums import (
     CampaignStatus,
     Channel,
     EmailStatus,
+    HookType,
     MembershipStatus,
     MessageStatus,
     ReplySentiment,
@@ -149,6 +150,10 @@ class Message(UUIDMixin, TimestampMixin, Base):
 
     channel: Mapped[Channel] = mapped_column(_enum(Channel), default=Channel.EMAIL)
     angle: Mapped[str | None] = mapped_column(String(120), default=None)
+    # Learning schema: hook taxonomy (from the writer) + cheap style metrics.
+    hook_type: Mapped[HookType | None] = mapped_column(_enum(HookType), default=None)
+    subject_len: Mapped[int | None] = mapped_column(Integer, default=None)
+    word_count: Mapped[int | None] = mapped_column(Integer, default=None)
     subject: Mapped[str | None] = mapped_column(String(400), default=None)
     body: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[MessageStatus] = mapped_column(_enum(MessageStatus), default=MessageStatus.DRAFT)
