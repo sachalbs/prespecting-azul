@@ -38,6 +38,7 @@ class MembershipStatus(StrEnum):
     SENT = "sent"
     REPLIED = "replied"
     SKIPPED = "skipped"
+    FAILED = "failed"
 
 
 class MessageStatus(StrEnum):

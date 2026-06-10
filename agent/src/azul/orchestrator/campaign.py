@@ -41,7 +41,7 @@ from azul.enums import (
     ReplySentiment,
     ReviewDecision,
 )
-from azul.errors import AzulError, ChannelError
+from azul.errors import AzulError, ChannelError, ResearchError, SourcingError, WritingError
 from azul.logging import get_logger
 from azul.memory import EpisodicMemory, ProceduralMemory
 from azul.orchestrator.graph import build_pipeline
@@ -257,17 +257,29 @@ def _process_rows(
 
     for row in rows:
         existing = _find_prospect(session, tenant, row)
-        state = pipeline.invoke(
-            {
-                "prospect": _brief_from_row(row),
-                "sender_name": sender_name,
-                "value_prop": value_prop,
-                # Flywheel: what's worked for this segment (procedural memory).
-                "procedural_hint": procedural.hint_for(row.segment),
-                # Relationship memory: our prior history with this person (episodic).
-                "relationship_note": episodic.recall(existing.id) if existing else None,
-            }
-        )
+        try:
+            state = pipeline.invoke(
+                {
+                    "prospect": _brief_from_row(row),
+                    "sender_name": sender_name,
+                    "value_prop": value_prop,
+                    # Flywheel: what's worked for this segment (procedural memory).
+                    "procedural_hint": procedural.hint_for(row.segment),
+                    # Relationship memory: our prior history with this person (episodic).
+                    "relationship_note": episodic.recall(existing.id) if existing else None,
+                }
+            )
+        except (SourcingError, ResearchError, WritingError) as exc:
+            # One bad prospect must never roll back the whole campaign.
+            log.error(
+                "prospect_failed", email=row.email or None, company=row.company, error=str(exc)
+            )
+            failed = existing
+            if failed is None and row.email:
+                failed = _upsert_prospect(session, tenant, email=row.email, row=row)
+            if failed is not None:
+                _ensure_membership(session, campaign, failed).status = MembershipStatus.FAILED
+            continue
 
         email_status = state.get("email_status", EmailStatus.UNKNOWN)
         resolved_email = state.get("resolved_email") or row.email
