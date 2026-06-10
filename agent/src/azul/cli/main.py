@@ -62,6 +62,112 @@ def run_campaign(
     typer.echo(f"Next: azul review --campaign {cid}")
 
 
+@app.command("discover")
+def discover(
+    tenant: str = typer.Option(..., help="Tenant slug"),
+    n: int = typer.Option(25, help="How many prospects to aim for"),
+    top: int | None = typer.Option(None, "--top", help="Non-interactive: keep the N best"),
+    reuse_brief: bool = typer.Option(
+        False, "--reuse-brief", help="Reuse the tenant's latest saved brief (skip questions)"
+    ),
+) -> None:
+    """Conversational brief -> web discovery -> scored table -> YOU pick who gets in."""
+    from datetime import UTC, datetime
+
+    from azul.discovery.brief import BriefSession, load_latest_brief, save_brief
+    from azul.discovery.dedup import dedupe
+    from azul.discovery.icp_scorer import score_candidates
+    from azul.discovery.store import promote, ranked, render_table, save_candidates
+    from azul.discovery.web_discovery import WebDiscovery
+    from azul.orchestrator.campaign import ensure_tenant
+
+    # 1. The brief — conversational, or reused from the tenant's targeting memory.
+    brief = None
+    brief_row_id = None
+    if reuse_brief:
+        with session_scope() as s:
+            t = ensure_tenant(s, tenant)
+            brief = load_latest_brief(s, t.id)
+        if brief is None:
+            typer.echo("No saved brief for this tenant — let's build one.")
+    if brief is None:
+        bs = BriefSession()
+        first = typer.prompt("Décris ce que tu vends et qui tu cherches")
+        question = bs.start(first)
+        while question is not None:
+            question = bs.reply(typer.prompt(f"azul ▸ {question}\nyou"))
+        brief = bs.brief
+        assert brief is not None
+        with session_scope() as s:
+            t = ensure_tenant(s, tenant)
+            brief_row_id = save_brief(s, t.id, brief).id
+        typer.echo("Brief enregistré (mémoire de ciblage du tenant).")
+
+    # 2. Discover -> dedup -> score -> persist everything (annotated, nothing dropped).
+    typer.echo(f"Recherche en cours (vise ~{n} prospects, sur-échantillonné)...")
+    candidates = WebDiscovery().discover(brief, n)
+    with session_scope() as s:
+        t = ensure_tenant(s, tenant)
+        candidates = dedupe(s, t.id, candidates)
+        score_candidates(brief, candidates)
+        rows = save_candidates(s, t.id, candidates, brief_id=brief_row_id)
+        table = render_table(rows)
+        ordered_ids = [r.id for r in ranked(rows)]
+    if not ordered_ids:
+        typer.echo("Aucun candidat nouveau trouvé (tout était déjà connu ?).")
+        return
+    typer.echo(table)
+
+    # 3. Explicit human selection — nothing enters the pipeline without it.
+    if top is not None:
+        picked_idx = list(range(1, min(top, len(ordered_ids)) + 1))
+    else:
+        raw = typer.prompt("Qui je retiens ? (ex: 1 3 5 · top 5 · rien)", default="rien")
+        raw = raw.strip().lower()
+        if raw in ("rien", "none", ""):
+            typer.echo("OK — personne ne rentre dans le pipeline. Les candidats restent notés.")
+            return
+        if raw.startswith("top"):
+            count = int(raw.split()[1]) if len(raw.split()) > 1 else 5
+            picked_idx = list(range(1, min(count, len(ordered_ids)) + 1))
+        else:
+            picked_idx = [int(t) for t in raw.split() if t.isdigit()]
+            picked_idx = [i for i in picked_idx if 1 <= i <= len(ordered_ids)]
+    if not picked_idx:
+        typer.echo("Sélection vide — personne ne rentre dans le pipeline.")
+        return
+
+    name = f"discover {datetime.now(UTC):%Y-%m-%d %H:%M}"
+    with session_scope() as s:
+        t = ensure_tenant(s, tenant)
+        from azul.db.models import DiscoveryCandidate
+
+        chosen = [s.get(DiscoveryCandidate, ordered_ids[i - 1]) for i in picked_idx]
+        prospects, campaign = promote(
+            s, t.id, [c for c in chosen if c is not None], campaign_name=name
+        )
+        cid = campaign.id
+        count = len(prospects)
+    typer.echo(f"\n{count} prospect(s) retenus (statut DISCOVERED, campagne {cid}).")
+    typer.echo(f"Pipeline: azul approve-list --campaign {cid}")
+
+
+@app.command("approve-list")
+def approve_list_cmd(
+    campaign: str = typer.Option(..., help="Campaign id or name"),
+    sender: str | None = typer.Option(None, help="Sender name for the messages"),
+    value_prop: str | None = typer.Option(None, help="One-line value prop"),
+) -> None:
+    """Run the pipeline (find email -> research -> draft) on a DISCOVERED campaign."""
+    with session_scope() as session:
+        c = camp.resolve_campaign(session, campaign)
+        drafted = camp.approve_list(
+            session, campaign_id=c.id, sender_name=sender, value_prop=value_prop
+        )
+        cid = c.id
+    typer.echo(f"{drafted} draft(s) ready. Next: azul review --campaign {cid}")
+
+
 @app.command("review")
 def review(campaign: str = typer.Option(..., help="Campaign id or name")) -> None:
     """Print drafts awaiting approval."""
