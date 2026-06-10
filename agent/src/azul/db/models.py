@@ -247,6 +247,23 @@ class GlobalPattern(UUIDMixin, TimestampMixin, Base):
     n_replied: Mapped[int] = mapped_column(Integer, default=0)
 
 
+class IcpBrief(UUIDMixin, TimestampMixin, Base):
+    """The tenant's targeting memory: structured ICP brief + the user's own words."""
+
+    __tablename__ = "icp_briefs"
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True)
+    raw_text: Mapped[str] = mapped_column(Text)
+    sells: Mapped[str | None] = mapped_column(String(400), default=None)
+    sector: Mapped[str | None] = mapped_column(String(200), default=None)
+    company_size: Mapped[str | None] = mapped_column(String(120), default=None)
+    geo: Mapped[str | None] = mapped_column(String(200), default=None)
+    target_role: Mapped[str | None] = mapped_column(String(200), default=None)
+    good_prospect: Mapped[str | None] = mapped_column(Text, default=None)
+    pain_signals: Mapped[list[str]] = mapped_column(default=list)
+    tone: Mapped[str | None] = mapped_column(String(200), default=None)
+
+
 class ConnectedAccount(UUIDMixin, TimestampMixin, Base):
     """Per-tenant OAuth credentials for a connected mailbox/channel (multi-tenant)."""
 

@@ -25,3 +25,7 @@ class WritingError(AzulError):
 
 class ChannelError(AzulError):
     pass
+
+
+class LLMError(AzulError):
+    """A generic LLM call (brief, discovery, scoring) failed or returned junk."""
