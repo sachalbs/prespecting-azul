@@ -10,6 +10,7 @@ relevance score, so the router can compare tiers apples-to-apples.
 from __future__ import annotations
 
 from typing import Any, ClassVar
+from urllib.parse import urlsplit
 
 import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
@@ -23,6 +24,9 @@ from azul.research.base import Hook, ResearchEngine, ResearchResult
 log = get_logger(__name__)
 
 _SNIPPET_LEN = 240
+# Floor for hooks sourced from the prospect's OWN domain so they lead the ranking
+# (playbook §2: the prospect's site comes first), just above the press cap (0.85).
+_OWN_DOMAIN_FLOOR = 0.86
 
 
 def _snippet(text: str) -> str:
@@ -30,16 +34,38 @@ def _snippet(text: str) -> str:
     return text[:_SNIPPET_LEN]
 
 
+def _host(url: str | None) -> str:
+    if not url:
+        return ""
+    netloc = urlsplit(url if "://" in url else f"//{url}").netloc.lower()
+    netloc = netloc.split(":")[0]  # drop any port
+    return netloc[4:] if netloc.startswith("www.") else netloc
+
+
+def is_directory_url(url: str | None, directories: set[str]) -> bool:
+    """True when the URL is a directory/aggregator — usable to find, not to cite."""
+    host = _host(url)
+    return any(host == d or host.endswith("." + d) for d in directories)
+
+
+def is_own_domain(url: str | None, domain: str | None) -> bool:
+    if not domain:
+        return False
+    host, dom = _host(url), domain.strip().lower()
+    return bool(host) and (host == dom or host.endswith("." + dom))
+
+
 class TavilyResearchEngine(ResearchEngine):
     name: ClassVar[str] = "tavily"
 
     def __init__(self, timeout: float = 30.0) -> None:
-        key = get_settings().tavily_api_key
-        if not key:
+        s = get_settings()
+        if not s.tavily_api_key:
             raise ConfigError("TAVILY_API_KEY is required for RESEARCH_ENGINE=tavily/tiered")
+        self._directories = s.directory_domain_set
         self._client = httpx.Client(
             base_url="https://api.tavily.com",
-            headers={"Authorization": f"Bearer {key}"},
+            headers={"Authorization": f"Bearer {s.tavily_api_key}"},
             timeout=timeout,
         )
 
@@ -145,5 +171,22 @@ class TavilyResearchEngine(ResearchEngine):
             log.error("tavily_failed", email=prospect.email, error=str(exc))
             raise ResearchError(f"Tavily research failed: {exc}") from exc
 
+        hooks = self._prioritize(hooks, domain)
         log.info("tavily_done", email=prospect.email, hooks=len(hooks))
         return ResearchResult(engine=self.name, hooks=hooks, sources=sources, raw=raw)
+
+    def _prioritize(self, hooks: list[Hook], domain: str | None) -> list[Hook]:
+        """Drop directory-sourced hooks (never citable); the prospect's site leads."""
+        kept: list[Hook] = []
+        for h in hooks:
+            if is_directory_url(h.source_url, self._directories):
+                continue  # an annuaire is how we FOUND them, not what we cite
+            if is_own_domain(h.source_url, domain):
+                h.confidence = max(h.confidence or 0.0, _OWN_DOMAIN_FLOOR)
+            kept.append(h)
+        # The prospect's own domain comes first; ties broken by confidence.
+        kept.sort(
+            key=lambda h: (is_own_domain(h.source_url, domain), h.confidence or 0.0),
+            reverse=True,
+        )
+        return kept

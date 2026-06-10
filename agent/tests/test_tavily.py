@@ -98,11 +98,12 @@ def test_tavily_builds_hooks_from_search_and_extract() -> None:
     assert any("usage-based pricing" in t for t in texts)  # press mention
     assert any(t.startswith("Hiring signal:") for t in texts)  # job postings
     assert any("garage in Lyon" in t for t in texts)  # /about extract
-    # Same structure as Holo hooks: dict round-trip with confidence + source.
+    # The prospect's OWN domain leads (playbook §2): their acme.com blog post
+    # outranks a third-party press mention even at a higher raw score.
     top = max(result.hooks, key=lambda h: h.confidence or 0)
-    assert top.as_dict()["source_url"] == "https://techpress.example/ann-lee"
-    assert top.confidence is not None and top.confidence >= 0.85 - 1e-9
-    assert result.top_hook is not None and "usage-based" in result.top_hook
+    assert top.as_dict()["source_url"] == "https://acme.com/blog/scaling"
+    assert top.confidence is not None and top.confidence >= 0.86 - 1e-9
+    assert result.hooks[0].source_url == "https://acme.com/blog/scaling"  # own domain first
 
 
 def test_tavily_extract_includes_blog_url_found_in_search() -> None:
@@ -127,3 +128,47 @@ def test_tavily_empty_prospect_returns_no_hooks() -> None:
     with env(TAVILY_API_KEY="k"):
         result = _mocked_engine().research(ProspectBrief(email="x@y.z"))
     assert result.hooks == []
+
+
+# ── directory exclusion + own-domain priority ───────────────────────────────
+
+
+def test_directory_helpers() -> None:
+    from azul.research.tavily import is_directory_url, is_own_domain
+
+    dirs = {"trustfolio.co", "sortlist.com"}
+    assert is_directory_url("https://www.trustfolio.co/agences/pixel", dirs)
+    assert is_directory_url("https://fr.sortlist.com/x", dirs)  # subdomain
+    assert not is_directory_url("https://pixel.fr/about", dirs)
+    assert is_own_domain("https://www.acme.fr/blog", "acme.fr")
+    assert is_own_domain("https://blog.acme.fr/x", "acme.fr")  # subdomain of own
+    assert not is_own_domain("https://other.fr", "acme.fr")
+    assert not is_own_domain("https://acme.fr", None)
+
+
+def test_directory_press_result_is_never_a_hook() -> None:
+    press = {
+        "results": [
+            {
+                "url": "https://www.trustfolio.co/agences/acme",
+                "content": "Acme is ranked #3 best agency in our directory.",
+                "score": 0.95,
+            },
+            {
+                "url": "https://acme.com/blog/post",
+                "content": "Why we dropped per-seat pricing.",
+                "score": 0.6,
+            },
+        ]
+    }
+    with env(TAVILY_API_KEY="k"), respx.mock(base_url="https://api.tavily.com") as router:
+        router.post("/search").mock(
+            side_effect=[httpx.Response(200, json=press), httpx.Response(200, json={"results": []})]
+        )
+        router.post("/extract").mock(return_value=httpx.Response(200, json={"results": []}))
+        result = _mocked_engine().research(_PROSPECT)
+
+    urls = [h.source_url for h in result.hooks]
+    assert "https://www.trustfolio.co/agences/acme" not in str(urls)  # directory excluded
+    assert any("acme.com" in (u or "") for u in urls)  # own-domain hook kept
+    assert all("trustfolio" not in (u or "") for u in urls)

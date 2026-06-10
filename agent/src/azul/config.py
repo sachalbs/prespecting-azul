@@ -56,6 +56,13 @@ class Settings(BaseSettings):
     tavily_api_key: str | None = None
     # Tiered router: escalate to Holo when tier 1 yields <2 hooks at this confidence.
     research_tier_threshold: float = 0.6
+    # Directory/aggregator domains: usable to FIND a prospect, never citable as a
+    # hook source in the email (citing an annuaire = lazy research).
+    directory_domains: str = (
+        "trustfolio.co,trustfolio.com,sortlist.com,sortlist.fr,saleshandy.com,"
+        "clutch.co,goodfirms.co,malt.fr,malt.com,societe.com,pappers.fr,"
+        "trustpilot.com,glassdoor.com,glassdoor.fr,indeed.com,welcometothejungle.com"
+    )
 
     # Research — Holo3 computer-use (OpenAI-compatible, drives a headless browser)
     hai_api_key: str | None = None
@@ -102,6 +109,10 @@ class Settings(BaseSettings):
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
+
+    @property
+    def directory_domain_set(self) -> set[str]:
+        return {d.strip().lower() for d in self.directory_domains.split(",") if d.strip()}
 
     @property
     def graph_redirect_uri(self) -> str:
