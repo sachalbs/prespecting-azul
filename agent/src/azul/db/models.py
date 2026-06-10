@@ -264,6 +264,36 @@ class IcpBrief(UUIDMixin, TimestampMixin, Base):
     tone: Mapped[str | None] = mapped_column(String(200), default=None)
 
 
+class DiscoveryCandidate(UUIDMixin, TimestampMixin, Base):
+    """A company found by discovery, kept WITH its annotations — nothing thrown away.
+
+    `promoted` + `prospect_id` record the human's selection; unpromoted rows stay
+    as the audit trail (and as the dedup memory of what was already discovered).
+    """
+
+    __tablename__ = "discovery_candidates"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "domain", name="uq_candidate_tenant_domain"),
+    )
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True)
+    brief_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("icp_briefs.id"), default=None
+    )
+    company_name: Mapped[str] = mapped_column(String(200))
+    domain: Mapped[str] = mapped_column(String(255), index=True)
+    founder_name: Mapped[str | None] = mapped_column(String(200), default=None)
+    founder_role: Mapped[str | None] = mapped_column(String(200), default=None)
+    source_url: Mapped[str | None] = mapped_column(String(800), default=None)
+    raw_context: Mapped[str] = mapped_column(Text, default="")
+    icp_score: Mapped[float | None] = mapped_column(Float, default=None)
+    score_reason: Mapped[str | None] = mapped_column(Text, default=None)
+    promoted: Mapped[bool] = mapped_column(Boolean, default=False)
+    prospect_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("prospects.id"), default=None
+    )
+
+
 class ConnectedAccount(UUIDMixin, TimestampMixin, Base):
     """Per-tenant OAuth credentials for a connected mailbox/channel (multi-tenant)."""
 
