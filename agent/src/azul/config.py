@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DiscoveryProvider = Literal["stub", "websearch"]
 SourcingProvider = Literal["stub", "finder", "prospeo", "waterfall"]
-ResearchEngineName = Literal["stub", "dossier", "holo3"]
+ResearchEngineName = Literal["stub", "dossier", "tavily", "holo3"]
 WriterProvider = Literal["stub", "openai_compat"]
 ChannelName = Literal["stub", "graph"]
 
@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     # In-house verifier: SMTP RCPT handshake (needs outbound port 25 — VPS only).
     # Off by default: syntax + MX checks still run, verdicts cap at UNKNOWN.
     verify_smtp: bool = False
+
+    # Research — Tavily (tier 1: search + extract, no browser)
+    tavily_api_key: str | None = None
 
     # Research — Holo3 computer-use (OpenAI-compatible, drives a headless browser)
     hai_api_key: str | None = None

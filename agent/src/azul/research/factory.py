@@ -9,6 +9,10 @@ from azul.research.stub import StubResearchEngine
 
 def get_research_engine() -> ResearchEngine:
     name = get_settings().research_engine
+    if name == "tavily":
+        from azul.research.tavily import TavilyResearchEngine
+
+        return TavilyResearchEngine()
     if name == "holo3":
         from azul.research.holo3 import Holo3ResearchEngine
 
