@@ -206,6 +206,22 @@ def approve(
     typer.echo(f"Approved {count} message(s).")
 
 
+@app.command("redraft")
+def redraft(
+    campaign: str = typer.Option(..., help="Campaign id or name"),
+    sender: str | None = typer.Option(None, help="Sender name for the messages"),
+    value_prop: str | None = typer.Option(None, help="One-line value prop"),
+) -> None:
+    """Regenerate a campaign's drafts in place — no re-resolve, no re-find, no research."""
+    with session_scope() as session:
+        c = camp.resolve_campaign(session, campaign)
+        n = camp.redraft_campaign(
+            session, campaign_id=c.id, sender_name=sender, value_prop=value_prop
+        )
+        cid = c.id
+    typer.echo(f"Redrafted {n} draft(s). Next: azul review --campaign {cid}")
+
+
 @app.command("send-approved")
 def send_approved(
     campaign: str = typer.Option(..., help="Campaign id or name"),

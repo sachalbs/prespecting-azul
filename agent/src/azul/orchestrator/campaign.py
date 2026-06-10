@@ -594,6 +594,65 @@ def send_approved(session: Session, *, campaign_id: uuid.UUID, dry_run: bool = F
     return sent
 
 
+# ── redraft (regenerate drafts in place — no resolver/finder/research) ───────
+
+
+def redraft_campaign(
+    session: Session,
+    *,
+    campaign_id: uuid.UUID,
+    sender_name: str | None = None,
+    value_prop: str | None = None,
+) -> int:
+    """Regenerate the step-1 DRAFTs of a campaign from already-persisted data.
+
+    Reuses each prospect's resolved identity, inferred language and stored research
+    hook — it never re-runs the resolver, finder or research. Only untouched DRAFTs
+    are rewritten; approved/sent messages and human-edited drafts are left alone.
+    """
+    from azul.writing.linter import lint_draft
+
+    writer = get_writer()
+    drafts = session.scalars(
+        select(Message).where(
+            Message.campaign_id == campaign_id,
+            Message.step == 1,
+            Message.status == MessageStatus.DRAFT,
+        )
+    ).all()
+    count = 0
+    for m in drafts:
+        if m.human_edited_body:
+            continue  # never clobber a human's edit
+        prospect = m.prospect
+        research = session.scalars(
+            select(Research)
+            .where(Research.prospect_id == prospect.id, Research.campaign_id == campaign_id)
+            .order_by(Research.created_at.desc())
+        ).first()
+        draft = lint_draft(
+            writer,
+            DraftRequest(
+                prospect=_brief_from_prospect(prospect),
+                hook=research.top_hook if research else None,
+                sender_name=sender_name,
+                value_prop=value_prop,
+                target_language=prospect.target_language,
+            ),
+        )
+        m.angle = draft.angle
+        m.hook_type = draft.hook_type
+        m.subject = draft.subject
+        m.subject_len = len(draft.subject or "")
+        m.word_count = len(draft.body.split())
+        m.body = draft.body
+        m.review_required = draft.review_required
+        count += 1
+    session.flush()
+    log.info("redrafted", campaign_id=str(campaign_id), count=count)
+    return count
+
+
 # ── follow-up (one relance for non-repliers, as a child message) ───────────
 
 
