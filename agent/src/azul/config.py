@@ -87,6 +87,8 @@ class Settings(BaseSettings):
     send_min_delay_seconds: int = 45
     send_max_delay_seconds: int = 180
     daily_send_cap: int = 25
+    # Up to 3 seed mailboxes (comma-separated) for `azul deliverability-check`.
+    seed_inboxes: str | None = None
 
     # Flywheel (later) — skills embedding dimension
     embedding_dim: int = Field(default=1024, ge=1)

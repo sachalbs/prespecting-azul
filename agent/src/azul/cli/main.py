@@ -272,6 +272,22 @@ def doctor(
     )
 
 
+@app.command("deliverability-check")
+def deliverability_check(
+    mail_tester: str = typer.Argument(..., help="The check-my-mail address from mail-tester.com"),
+) -> None:
+    """Send 1 REAL mail (Graph) to mail-tester + SEED_INBOXES; you read the verdicts."""
+    from azul.cli.doctor import run_deliverability_check
+
+    sent = run_deliverability_check(get_settings(), mail_tester)
+    for to in sent:
+        typer.echo(f"  sent -> {to}")
+    typer.echo(
+        f"\nSent {len(sent)} probe(s). Now read the mail-tester score and check "
+        "inbox vs spam on each seed mailbox."
+    )
+
+
 @app.command("chat")
 def chat() -> None:
     """Manage Azul like an employee, from chat (the product surface)."""

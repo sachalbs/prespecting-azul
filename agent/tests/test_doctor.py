@@ -206,3 +206,51 @@ def test_run_live_checks_explicit_domain_runs_dns(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(doctor_mod, "check_dns_auth", fake_dns)
     checks = run_live_checks(s, domain="contoso.com")
     assert any(c.name == "SPF" and c.detail == "contoso.com" for c in checks)
+
+
+# ── deliverability-check ─────────────────────────────────────────────────────
+
+
+class _RecordingChannel:
+    name = "graph"
+
+    def __init__(self) -> None:
+        self.sent: list[Any] = []
+
+    def send(self, message: Any) -> Any:
+        from azul.connectors.base import SendResult
+
+        self.sent.append(message)
+        return SendResult(external_id=f"ext-{len(self.sent)}")
+
+
+def test_deliverability_check_sends_to_tester_and_three_seeds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from azul.cli.doctor import run_deliverability_check
+
+    ch = _RecordingChannel()
+
+    def fake_channel() -> Any:
+        return ch
+
+    import azul.connectors as connectors_mod
+
+    monkeypatch.setattr(connectors_mod, "get_channel", fake_channel)
+    s = _settings(
+        channel="graph",
+        seed_inboxes="a@gmail.test, b@yahoo.test, c@proton.test, d@too-many.test",
+    )
+    sent = run_deliverability_check(s, "web-x@mail-tester.com")
+    assert sent[0] == "web-x@mail-tester.com"
+    assert len(sent) == 4  # tester + 3 seeds max, the 4th seed dropped
+    assert "d@too-many.test" not in sent
+    assert all(m.dedup_key.startswith("deliverability:") for m in ch.sent)
+
+
+def test_deliverability_check_refuses_off_graph_channel() -> None:
+    from azul.cli.doctor import run_deliverability_check
+    from azul.errors import ConfigError
+
+    with pytest.raises(ConfigError):
+        run_deliverability_check(_settings(channel="stub"), "web-x@mail-tester.com")

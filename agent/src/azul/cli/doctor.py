@@ -246,6 +246,53 @@ def check_dns_auth(domain: str) -> list[Check]:
     return checks
 
 
+# ── Deliverability probe: 1 real mail to mail-tester + seed inboxes ──────────
+
+_PROBE_BODY = """\
+Hi,
+
+Quick deliverability probe from my own mailbox — checking that plain-text,
+person-to-person email lands where it should. No action needed.
+
+Thanks!
+"""
+
+
+def run_deliverability_check(settings: Settings, mail_tester: str) -> list[str]:
+    """Send one real mail via Graph to the mail-tester address + up to 3 seeds.
+
+    Returns the addresses actually sent to (raises ConfigError off CHANNEL=graph).
+    """
+    from datetime import UTC, datetime
+
+    from azul.connectors import OutboundMessage, get_channel
+    from azul.enums import Channel as ChannelEnum
+    from azul.errors import ChannelError, ConfigError
+
+    if settings.channel != "graph":
+        raise ConfigError("deliverability-check sends REAL mail — set CHANNEL=graph first")
+    seeds = [a.strip() for a in (settings.seed_inboxes or "").split(",") if a.strip()][:3]
+    channel = get_channel()
+    today = datetime.now(UTC).strftime("%Y%m%d")
+    sent: list[str] = []
+    for to in [mail_tester, *seeds]:
+        try:
+            channel.send(
+                OutboundMessage(
+                    channel=ChannelEnum.EMAIL,
+                    body=_PROBE_BODY,
+                    dedup_key=f"deliverability:{to}:{today}",
+                    to_email=to,
+                    subject="quick deliverability check",
+                )
+            )
+        except ChannelError as exc:
+            log.error("deliverability_send_failed", to=to, error=str(exc))
+            continue
+        sent.append(to)
+    return sent
+
+
 # ── Orchestration ────────────────────────────────────────────────────────────
 
 
