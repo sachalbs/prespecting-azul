@@ -202,8 +202,11 @@ def follow_up(campaign: str = typer.Option(..., help="Campaign id or name")) -> 
 
 
 @app.command("doctor")
-def doctor() -> None:
-    """Preflight: check selected adapters, keys, and files before a real run."""
+def doctor(
+    offline: bool = typer.Option(False, "--offline", help="Skip the live API calls"),
+    domain: str | None = typer.Option(None, help="Sender domain for SPF/DKIM/DMARC checks"),
+) -> None:
+    """Preflight: env checks + REAL calls (DB, Tavily, writer, Holo, Graph, DNS auth)."""
     from pathlib import Path
 
     s = get_settings()
@@ -251,8 +254,21 @@ def doctor() -> None:
     for label, good in checks:
         typer.echo(f"  {'OK ' if good else 'MISSING'} {label}")
     missing = [label for label, good in checks if not good]
+
+    failed_live = 0
+    if not offline:
+        from azul.cli.doctor import run_live_checks
+
+        typer.echo("\nLive checks (real calls):")
+        for check in run_live_checks(s, domain=domain):
+            status = "OK  " if check.ok else "FAIL"
+            typer.echo(f"  {status} {check.name}" + (f" — {check.detail}" if check.detail else ""))
+            if not check.ok:
+                failed_live += 1
+
+    total = len(missing) + failed_live
     typer.echo(
-        f"\n{len(missing)} item(s) need attention." if missing else "\nAll preflight checks passed."
+        f"\n{total} item(s) need attention." if total else "\nAll preflight checks passed."
     )
 
 
