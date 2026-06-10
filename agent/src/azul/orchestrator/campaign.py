@@ -310,6 +310,7 @@ def _process_rows(
                     prospect_id=prospect.id,
                     campaign_id=campaign.id,
                     engine=research.engine,
+                    tier=research.tier,
                     top_hook=research.top_hook,
                     hooks=[h.as_dict() for h in research.hooks],
                     sources=research.sources,

@@ -33,6 +33,8 @@ class ResearchResult:
     hooks: list[Hook] = field(default_factory=list)
     sources: list[dict[str, Any]] = field(default_factory=list)
     raw: dict[str, Any] = field(default_factory=dict)
+    # Which tier produced the retained hooks (tiered router): "tier1" | "tier2".
+    tier: str | None = None
 
     @property
     def top_hook(self) -> str | None:

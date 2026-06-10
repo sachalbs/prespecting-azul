@@ -13,6 +13,10 @@ def get_research_engine() -> ResearchEngine:
         from azul.research.tavily import TavilyResearchEngine
 
         return TavilyResearchEngine()
+    if name == "tiered":
+        from azul.research.router import TieredResearchEngine
+
+        return TieredResearchEngine()
     if name == "holo3":
         from azul.research.holo3 import Holo3ResearchEngine
 

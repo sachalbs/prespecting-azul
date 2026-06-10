@@ -115,6 +115,9 @@ class Research(UUIDMixin, TimestampMixin, Base):
     prospect_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("prospects.id"), index=True)
     campaign_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("campaigns.id"), default=None)
     engine: Mapped[str] = mapped_column(String(60))
+    # Which tier of the staged router produced the retained hooks (tier1=Tavily,
+    # tier2=Holo) — measures the real Tier1/Tier2 ratio.
+    tier: Mapped[str | None] = mapped_column(String(20), default=None)
     top_hook: Mapped[str | None] = mapped_column(Text, default=None)
     hooks: Mapped[list[dict[str, Any]]] = mapped_column(default=list)
     sources: Mapped[list[dict[str, Any]]] = mapped_column(default=list)

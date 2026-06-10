@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DiscoveryProvider = Literal["stub", "websearch"]
 SourcingProvider = Literal["stub", "finder", "prospeo", "waterfall"]
-ResearchEngineName = Literal["stub", "dossier", "tavily", "holo3"]
+ResearchEngineName = Literal["stub", "dossier", "tavily", "tiered", "holo3"]
 WriterProvider = Literal["stub", "openai_compat"]
 ChannelName = Literal["stub", "graph"]
 
@@ -50,6 +50,8 @@ class Settings(BaseSettings):
 
     # Research — Tavily (tier 1: search + extract, no browser)
     tavily_api_key: str | None = None
+    # Tiered router: escalate to Holo when tier 1 yields <2 hooks at this confidence.
+    research_tier_threshold: float = 0.6
 
     # Research — Holo3 computer-use (OpenAI-compatible, drives a headless browser)
     hai_api_key: str | None = None
