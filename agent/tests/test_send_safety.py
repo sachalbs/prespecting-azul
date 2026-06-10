@@ -107,3 +107,32 @@ def test_channel_error_is_committed_immediately(
         msgs = list(s.query(Message).filter(Message.campaign_id == cid))
         assert sum(1 for m in msgs if m.status == MessageStatus.FAILED) == 1
         assert sum(1 for m in msgs if m.status == MessageStatus.SENT) == 4
+
+
+def test_daily_cap_counts_prior_sends_from_db(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from azul.config import get_settings
+
+    capped = get_settings().model_copy(update={"daily_send_cap": 4})
+    monkeypatch.setattr(camp, "get_settings", lambda: capped)
+
+    # Campaign A: 3 sends land today.
+    a = tmp_path / "a.csv"
+    a.write_text(
+        "email,full_name,company\n"
+        + "\n".join(f"a{i}@acme.com,A {i},Acme" for i in range(1, 4)),
+        encoding="utf-8",
+    )
+    rows_a = camp.load_prospects_csv(str(a))
+    with session_scope() as s:
+        cid_a = camp.run_campaign(s, tenant_slug="t1", name="A", rows=rows_a).id
+    with session_scope() as s:
+        camp.approve(s, campaign_id=cid_a, approve_all=True)
+    with session_scope() as s:
+        assert camp.send_approved(s, campaign_id=cid_a) == 3
+
+    # Campaign B, same day: only 1 of 5 may go out (4 - 3 already sent today).
+    cid_b = _approved_campaign(tmp_path)
+    with session_scope() as s:
+        assert camp.send_approved(s, campaign_id=cid_b) == 1

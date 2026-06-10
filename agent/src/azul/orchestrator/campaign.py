@@ -16,7 +16,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from azul.config import get_settings
@@ -479,10 +479,23 @@ def send_approved(session: Session, *, campaign_id: uuid.UUID, dry_run: bool = F
             .order_by(Message.created_at)
         )
     )
+    # The cap is per DAY, not per invocation: count today's sends across the DB.
+    today_start = _now().replace(hour=0, minute=0, second=0, microsecond=0)
+    sent_today: int = (
+        session.scalar(
+            select(func.count())
+            .select_from(Message)
+            .where(Message.status == MessageStatus.SENT, Message.sent_at >= today_start)
+        )
+        or 0
+    )
+
     sent = 0
     for i, m in enumerate(messages):
-        if sent >= settings.daily_send_cap:
-            log.warning("daily_cap_reached", cap=settings.daily_send_cap)
+        if sent_today + sent >= settings.daily_send_cap:
+            log.warning(
+                "daily_cap_reached", cap=settings.daily_send_cap, sent_today=sent_today + sent
+            )
             break
         if m.external_id:  # idempotent: already sent
             continue
