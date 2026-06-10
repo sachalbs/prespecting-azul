@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+# OAuth token cache (Outlook refresh token, plaintext) + LinkedIn session cookies
+.msal_cache.bin
+.linkedin_state.json
 
 # python
 __pycache__/

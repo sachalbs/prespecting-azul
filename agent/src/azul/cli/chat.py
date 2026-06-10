@@ -56,6 +56,14 @@ class ChatSession:
         if not _interpreted:
             translated = interpret(line)
             if translated:
+                # A REAL send must never fire off an LLM's interpretation of free
+                # text — require the user to type the explicit command themselves.
+                t_cmd, _, t_rest = translated.partition(" ")
+                if t_cmd == "send" and "dry" not in t_rest.lower():
+                    return (
+                        "J'ai compris `send` (envoi réel depuis ta boîte). Par sécurité, "
+                        "tape `send` toi-même pour confirmer — ou `send dry` pour un aperçu."
+                    )
                 return self.handle(translated, _interpreted=True)
         return "Didn't catch that. Type `help`."
 

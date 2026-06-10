@@ -76,5 +76,6 @@ class TelegramBot:
                     offset = update["update_id"] + 1
                     self.handle_update(update)
             except httpx.HTTPError as exc:
-                log.warning("telegram_poll_error", error=str(exc))
+                # Never log str(exc): httpx messages embed the URL, which carries the token.
+                log.warning("telegram_poll_error", error=type(exc).__name__)
                 time.sleep(3)
