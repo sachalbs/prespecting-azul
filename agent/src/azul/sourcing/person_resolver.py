@@ -31,8 +31,12 @@ _CONTENT_BUDGET = 5000
 _SYSTEM = """\
 You identify the founder or top decision-maker (CEO, gérant, dirigeant) of ONE
 company from web-page text. Return only what the text supports — do not invent.
-Return STRICT JSON: {"founder_name": str, "founder_role": str, "confidence": float}
-where confidence is 0-1 (0 = nothing found, 1 = explicitly named). "" if unknown.
+Give the name split with the order VERIFIED from the text: "first_name" is the
+given name, "last_name" the family name (never swap them; e.g. for "Karim
+Hassani", first_name="Karim", last_name="Hassani"). Return STRICT JSON:
+{"founder_name": str, "first_name": str, "last_name": str, "founder_role": str,
+"confidence": float} where confidence is 0-1 (0 = nothing found, 1 = explicitly
+named). Use "" for anything unknown.
 """
 
 
@@ -41,6 +45,8 @@ class ResolvedPerson:
     founder_name: str | None
     founder_role: str | None
     confidence: float
+    first_name: str | None = None
+    last_name: str | None = None
 
 
 class PersonResolver(ABC):
@@ -124,12 +130,19 @@ class TavilyPersonResolver(PersonResolver):
 
         name = str(data.get("founder_name") or "").strip() or None
         role = str(data.get("founder_role") or "").strip() or None
+        first = str(data.get("first_name") or "").strip() or None
+        last = str(data.get("last_name") or "").strip() or None
+        if name and not first and not last:
+            # No explicit split given: fall back to a naive one (FR-ordered guess).
+            parts = name.split()
+            first = parts[0] if parts else None
+            last = " ".join(parts[1:]) or None if len(parts) > 1 else None
         try:
             confidence = max(0.0, min(1.0, float(data.get("confidence", 0.0))))
         except (TypeError, ValueError):
             confidence = 0.0
         log.info("person_resolved", company=company, found=bool(name), confidence=confidence)
-        return ResolvedPerson(name, role, confidence)
+        return ResolvedPerson(name, role, confidence, first_name=first, last_name=last)
 
 
 def get_person_resolver() -> PersonResolver:

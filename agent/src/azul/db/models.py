@@ -81,6 +81,10 @@ class Prospect(UUIDMixin, TimestampMixin, Base):
     )
     verify_confidence: Mapped[float | None] = mapped_column(Float, default=None)
     full_name: Mapped[str | None] = mapped_column(String(200), default=None)
+    # Explicit given/family name with the order verified (resolver) — so the writer
+    # never greets someone by their surname ("Hassani" used as a first name).
+    first_name: Mapped[str | None] = mapped_column(String(120), default=None)
+    last_name: Mapped[str | None] = mapped_column(String(120), default=None)
     title: Mapped[str | None] = mapped_column(String(200), default=None)
     company: Mapped[str | None] = mapped_column(String(200), default=None)
     company_domain: Mapped[str | None] = mapped_column(String(255), default=None)

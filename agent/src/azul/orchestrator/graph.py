@@ -51,7 +51,11 @@ def build_pipeline(
         if not person.founder_name or person.confidence < 0.5:
             return {"resolve_status": "no_founder", "resolve_confidence": person.confidence}
         enriched = replace(
-            brief, full_name=person.founder_name, title=person.founder_role or brief.title
+            brief,
+            full_name=person.founder_name,
+            given_name=person.first_name,
+            family_name=person.last_name,
+            title=person.founder_role or brief.title,
         )
         return {
             "prospect": enriched,

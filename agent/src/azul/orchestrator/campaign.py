@@ -158,6 +158,8 @@ def _brief_from_prospect(p: Prospect) -> ProspectBrief:
     return ProspectBrief(
         email=p.email,
         full_name=p.full_name,
+        given_name=p.first_name,
+        family_name=p.last_name,
         title=p.title,
         company=p.company,
         company_domain=p.company_domain,
@@ -298,6 +300,8 @@ def _process_rows(
         resolved_brief = state.get("prospect")
         resolved_name = resolved_brief.full_name if resolved_brief else None
         resolved_title = resolved_brief.title if resolved_brief else None
+        resolved_given = resolved_brief.given_name if resolved_brief else None
+        resolved_family = resolved_brief.family_name if resolved_brief else None
 
         email_status = state.get("email_status", EmailStatus.UNKNOWN)
         resolved_email = state.get("resolved_email") or row.email
@@ -308,10 +312,13 @@ def _process_rows(
         prospect = _upsert_prospect(
             session, tenant, email=resolved_email, row=row, dossier=state.get("dossier") or {}
         )
-        # Persist the resolved decision-maker on the prospect.
+        # Persist the resolved decision-maker on the prospect (name parts incl.).
         if resolved_name and not prospect.full_name:
             prospect.full_name = resolved_name
             prospect.title = resolved_title or prospect.title
+        if resolved_given and not prospect.first_name:
+            prospect.first_name = resolved_given
+            prospect.last_name = resolved_family
         prospect.email_status = email_status
         prospect.verify_status = state.get("verify_status")
         prospect.verify_confidence = state.get("verify_confidence")

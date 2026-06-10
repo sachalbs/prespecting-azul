@@ -58,7 +58,9 @@ def build_messages(request: DraftRequest) -> list[dict[str, str]]:
         "channel": request.channel,
         "recipient": {
             "name": p.full_name,
+            # Verified split when known — greet by the GIVEN name, never the family one.
             "first_name": p.first_name,
+            "last_name": p.family_name,
             "title": p.title,
             "company": p.company,
             "segment": p.segment,
