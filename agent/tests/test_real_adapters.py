@@ -226,3 +226,84 @@ def test_graph_auto_submitted_header_flags_bounce() -> None:
         (reply,) = GraphChannel(token="fake").fetch_replies()
     assert reply.is_bounce
     assert reply.bounce_recipient == "bob@ghost.io"
+
+
+def _writer_env() -> Any:
+    return env(
+        WRITER_PROVIDER="openai_compat",
+        WRITER_BASE_URL="https://api.deepseek.com/v1",
+        WRITER_MODEL="deepseek-chat",
+        WRITER_API_KEY="k",
+    )
+
+
+def _draft_request() -> Any:
+    from azul.domain import ProspectBrief
+    from azul.writing.base import DraftRequest
+
+    return DraftRequest(prospect=ProspectBrief(email="a@b.com", full_name="Ann Lee"), hook="h")
+
+
+_GOOD = '{"subject":"s","body":"Hi Ann.","angle":"hook"}'
+
+
+def test_writer_default_model_is_deepseek_chat() -> None:
+    old = os.environ.pop("WRITER_MODEL", None)
+    get_settings.cache_clear()
+    try:
+        assert get_settings().writer_model == "deepseek-chat"
+    finally:
+        if old is not None:
+            os.environ["WRITER_MODEL"] = old
+        get_settings.cache_clear()
+
+
+def test_writer_falls_back_without_response_format_on_400() -> None:
+    from azul.writing.openai_compat import OpenAICompatWriter
+
+    bodies: list[str] = []
+
+    def _handler(request: httpx.Request) -> httpx.Response:
+        bodies.append(request.read().decode())
+        if "response_format" in bodies[-1]:
+            return httpx.Response(400, json={"error": "response_format unsupported"})
+        return httpx.Response(200, json={"choices": [{"message": {"content": _GOOD}}]})
+
+    with _writer_env(), respx.mock(base_url="https://api.deepseek.com/v1") as router:
+        router.post("/chat/completions").mock(side_effect=_handler)
+        writer = OpenAICompatWriter()
+        draft = writer.write(_draft_request())
+        assert draft.body == "Hi Ann."
+        assert len(bodies) == 2 and "response_format" not in bodies[-1]
+        # The instance remembers: next write skips json mode entirely.
+        writer.write(_draft_request())
+        assert len(bodies) == 3 and "response_format" not in bodies[-1]
+
+
+def test_writer_retries_once_on_bad_json() -> None:
+    from azul.writing.openai_compat import OpenAICompatWriter
+
+    replies = [
+        httpx.Response(200, json={"choices": [{"message": {"content": "not json"}}]}),
+        httpx.Response(200, json={"choices": [{"message": {"content": _GOOD}}]}),
+    ]
+    with _writer_env(), respx.mock(base_url="https://api.deepseek.com/v1") as router:
+        route = router.post("/chat/completions").mock(side_effect=replies)
+        draft = OpenAICompatWriter().write(_draft_request())
+    assert draft.angle == "hook"
+    assert route.call_count == 2
+
+
+def test_writer_two_bad_json_replies_raise() -> None:
+    from azul.errors import WritingError
+    from azul.writing.openai_compat import OpenAICompatWriter
+
+    def _bad() -> httpx.Response:
+        return httpx.Response(200, json={"choices": [{"message": {"content": "nope"}}]})
+
+    with _writer_env(), respx.mock(base_url="https://api.deepseek.com/v1") as router:
+        router.post("/chat/completions").mock(side_effect=[_bad(), _bad()])
+        import pytest as _pytest
+
+        with _pytest.raises(WritingError):
+            OpenAICompatWriter().write(_draft_request())

@@ -63,10 +63,10 @@ class Settings(BaseSettings):
     # Path to a Playwright storage_state JSON with a logged-in LinkedIn session.
     linkedin_storage_state: str | None = None
 
-    # Writer (GLM-5.1 / DeepSeek V4 — OpenAI-compatible). Playbook = system prompt.
+    # Writer (DeepSeek V4 default — OpenAI-compatible, env-driven). Playbook = system prompt.
     writer_api_key: str | None = None
     writer_base_url: str | None = None
-    writer_model: str | None = None
+    writer_model: str = "deepseek-chat"
     writer_temperature: float = 0.7
     writer_playbook_path: str = "AZUL_COLD_OUTREACH_PLAYBOOK.md"
 
