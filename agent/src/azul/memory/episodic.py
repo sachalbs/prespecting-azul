@@ -73,11 +73,21 @@ class EpisodicMemory:
             return self.session.scalars(stmt).first()
         return None
 
+    def _already_ingested(self, message: Message, reply: InboundReply) -> bool:
+        """True if this inbound item already produced an outcome (idempotent polling)."""
+        inbound_id = reply.external_id or reply.raw.get("internetMessageId")
+        if not inbound_id:
+            return False
+        return any(o.raw_event.get("internetMessageId") == inbound_id for o in message.outcomes)
+
     def ingest_reply(self, reply: InboundReply) -> Outcome | None:
         """Attach an inbound reply/bounce to its message as an outcome."""
         message = self._match_message(reply)
         if message is None:
             log.warning("reply_unmatched", from_email=reply.from_email)
+            return None
+        if self._already_ingested(message, reply):
+            log.info("reply_duplicate_skipped", message_id=str(message.id))
             return None
 
         outcome = self.record_outcome(
