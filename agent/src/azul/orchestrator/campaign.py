@@ -490,12 +490,16 @@ def send_approved(session: Session, *, campaign_id: uuid.UUID, dry_run: bool = F
             m.status = MessageStatus.FAILED
             m.error = str(exc)
             log.error("send_failed", to=m.prospect.email, error=str(exc))
+            session.commit()
             continue
         m.external_id = result.external_id
         m.status = MessageStatus.SENT
         m.sent_at = _now()
         _set_membership(session, m, MembershipStatus.SENT)
         sent += 1
+        # Persist each send immediately: a crash mid-batch must never roll back
+        # already-sent statuses, or re-running would double-send real emails.
+        session.commit()
         # Pace real sends for deliverability (never spray). Stub sends instantly.
         if settings.channel != "stub" and i < len(messages) - 1:
             time.sleep(
