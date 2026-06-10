@@ -183,3 +183,46 @@ def test_openai_compat_writer_parses_a_draft() -> None:
         )
     assert draft.subject == "quick one"
     assert draft.angle == "funding"
+
+
+def test_graph_ndr_extracts_original_recipient() -> None:
+    inbox = {
+        "value": [
+            {
+                "from": {"emailAddress": {"address": "postmaster@outlook.com"}},
+                "subject": "Undeliverable: quick one",
+                "bodyPreview": "Your message to jane@acme.com couldn't be delivered.",
+                "internetMessageId": "<ndr1>",
+            }
+        ]
+    }
+    with respx.mock(base_url="https://graph.microsoft.com/v1.0") as router:
+        router.get("/me/mailFolders/inbox/messages").mock(
+            return_value=httpx.Response(200, json=inbox)
+        )
+        (reply,) = GraphChannel(token="fake").fetch_replies()
+    assert reply.is_bounce
+    assert reply.bounce_recipient == "jane@acme.com"
+
+
+def test_graph_auto_submitted_header_flags_bounce() -> None:
+    inbox = {
+        "value": [
+            {
+                "from": {"emailAddress": {"address": "noreply@relay.example"}},
+                "subject": "Message status",
+                "bodyPreview": "delivery to bob@ghost.io failed",
+                "internetMessageId": "<ndr2>",
+                "internetMessageHeaders": [
+                    {"name": "Auto-Submitted", "value": "auto-generated"}
+                ],
+            }
+        ]
+    }
+    with respx.mock(base_url="https://graph.microsoft.com/v1.0") as router:
+        router.get("/me/mailFolders/inbox/messages").mock(
+            return_value=httpx.Response(200, json=inbox)
+        )
+        (reply,) = GraphChannel(token="fake").fetch_replies()
+    assert reply.is_bounce
+    assert reply.bounce_recipient == "bob@ghost.io"

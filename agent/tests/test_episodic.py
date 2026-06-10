@@ -104,3 +104,28 @@ def test_distinct_replies_both_recorded(tmp_path: Path) -> None:
         assert EpisodicMemory(s).ingest_reply(r2) is not None
     with session_scope() as s:
         assert len(s.scalars(select(Outcome)).all()) == 2
+
+
+def test_ndr_bounce_attributed_to_original_recipient(tmp_path: Path) -> None:
+    from azul.connectors.base import InboundReply
+    from azul.db.models import Message, Outcome
+
+    _sent_campaign(tmp_path)
+    ndr = InboundReply(
+        text="Your message to ann@acme.com couldn't be delivered.",
+        from_email="postmaster@outlook.com",
+        external_id="<ndr1@x>",
+        is_bounce=True,
+        bounce_type="ndr",
+        bounce_recipient="ann@acme.com",
+        raw={"internetMessageId": "<ndr1@x>"},
+    )
+    with session_scope() as s:
+        outcome = EpisodicMemory(s).ingest_reply(ndr)
+        assert outcome is not None
+        assert outcome.bounced and not outcome.replied
+    with session_scope() as s:
+        o = s.scalars(select(Outcome)).one()
+        msg = s.get(Message, o.message_id)
+        assert msg is not None
+        assert msg.prospect.email == "ann@acme.com"

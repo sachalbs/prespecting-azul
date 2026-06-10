@@ -55,6 +55,16 @@ class EpisodicMemory:
 
     def _match_message(self, reply: InboundReply) -> Message | None:
         """Resolve an inbound reply to the message we sent (by external id / dedup key)."""
+        # Bounces come from postmaster@ — match on the ORIGINAL recipient instead.
+        if reply.is_bounce and reply.bounce_recipient:
+            stmt = (
+                select(Message)
+                .where(Message.prospect.has(email=reply.bounce_recipient))
+                .order_by(Message.sent_at.desc())
+            )
+            msg = self.session.scalars(stmt).first()
+            if msg:
+                return msg
         if reply.in_reply_to:
             stmt = select(Message).where(
                 (Message.external_id == reply.in_reply_to)

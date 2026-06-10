@@ -7,6 +7,7 @@ Sending is always an API call from the real mailbox — never computer-use.
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 from typing import Any, ClassVar
 
@@ -23,6 +24,37 @@ log = get_logger(__name__)
 
 _BOUNCE_SENDERS = ("postmaster@", "mailer-daemon@")
 _BOUNCE_SUBJECTS = ("undeliverable", "delivery status notification", "mail delivery failed")
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+
+
+def _headers(item: dict[str, Any]) -> dict[str, str]:
+    return {
+        str(h.get("name", "")).lower(): str(h.get("value", ""))
+        for h in item.get("internetMessageHeaders") or []
+    }
+
+
+def _is_ndr(item: dict[str, Any], sender: str | None) -> bool:
+    subject = (item.get("subject") or "").lower()
+    return (
+        any(b in (sender or "").lower() for b in _BOUNCE_SENDERS)
+        or any(subject.startswith(s) for s in _BOUNCE_SUBJECTS)
+        or _headers(item).get("auto-submitted") == "auto-generated"
+    )
+
+
+def _bounced_recipient(item: dict[str, Any], sender: str | None) -> str | None:
+    """The ORIGINAL recipient of a bounced send (the NDR's from is postmaster@)."""
+    candidates = list(_EMAIL_RE.findall(item.get("bodyPreview") or ""))
+    for r in item.get("toRecipients") or []:
+        addr = ((r.get("emailAddress") or {}) or {}).get("address")
+        if addr:
+            candidates.append(str(addr))
+    for c in candidates:
+        cl = c.lower()
+        if cl != (sender or "").lower() and not cl.startswith(_BOUNCE_SENDERS):
+            return c
+    return None
 
 
 class GraphChannel(Channel):
@@ -86,10 +118,7 @@ class GraphChannel(Channel):
         replies: list[InboundReply] = []
         for it in items:
             addr = (it.get("from", {}).get("emailAddress", {}) or {}).get("address")
-            subject = (it.get("subject") or "").lower()
-            is_bounce = any(b in (addr or "").lower() for b in _BOUNCE_SENDERS) or any(
-                subject.startswith(s) for s in _BOUNCE_SUBJECTS
-            )
+            is_bounce = _is_ndr(it, addr)
             replies.append(
                 InboundReply(
                     text=it.get("bodyPreview", ""),
@@ -98,6 +127,7 @@ class GraphChannel(Channel):
                     in_reply_to=it.get("conversationId"),
                     is_bounce=is_bounce,
                     bounce_type="ndr" if is_bounce else None,
+                    bounce_recipient=_bounced_recipient(it, addr) if is_bounce else None,
                     raw=it,
                 )
             )

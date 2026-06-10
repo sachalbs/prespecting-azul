@@ -34,6 +34,8 @@ class InboundReply:
     in_reply_to: str | None = None  # external_id of our sent message, if known
     is_bounce: bool = False
     bounce_type: str | None = None
+    # NDRs come from postmaster@ — this is the ORIGINAL recipient that bounced.
+    bounce_recipient: str | None = None
     raw: dict[str, Any] = field(default_factory=dict)
 
 
