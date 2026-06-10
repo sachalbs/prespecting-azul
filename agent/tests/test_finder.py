@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+import pytest
+
 from azul.enums import EmailStatus
 from azul.sourcing.base import EmailVerification, EmailVerifier
 from azul.sourcing.finder import FinderVerifier, candidates, pattern_of
@@ -93,3 +95,17 @@ def test_pattern_of_recognises_locals() -> None:
     assert pattern_of("ann.lee@acme.com", "Ann Lee") == "{first}.{last}"
     assert pattern_of("alee@acme.com", "Ann Lee") == "{f}{last}"
     assert pattern_of("contact@acme.com", "Ann Lee") is None
+
+
+def test_factory_returns_finder_without_any_paid_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    """SOURCING_PROVIDER=finder needs no Prospeo/Hunter/Dropcontact key."""
+    from azul.config import get_settings
+    from azul.sourcing.factory import get_verifier
+
+    monkeypatch.setenv("SOURCING_PROVIDER", "finder")
+    get_settings.cache_clear()
+    try:
+        verifier = get_verifier()
+        assert isinstance(verifier, FinderVerifier)
+    finally:
+        get_settings.cache_clear()

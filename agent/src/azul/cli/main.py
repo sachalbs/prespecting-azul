@@ -213,6 +213,15 @@ def doctor() -> None:
         f"writer={s.writer_provider} channel={s.channel}"
     )
     checks: list[tuple[str, bool]] = []
+    if s.sourcing_provider == "finder":
+        import importlib.util
+
+        checks.append(("dnspython installed", importlib.util.find_spec("dns") is not None))
+        if not s.verify_smtp:
+            typer.echo(
+                "  NOTE  VERIFY_SMTP=false — no SMTP handshake, verdicts cap at UNKNOWN "
+                "(fine off-VPS; enable on the VPS where port 25 is open)"
+            )
     if s.sourcing_provider == "prospeo":
         checks.append(("PROSPEO_API_KEY", bool(s.prospeo_api_key)))
     if s.research_engine == "holo3":

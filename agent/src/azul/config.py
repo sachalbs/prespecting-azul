@@ -9,7 +9,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DiscoveryProvider = Literal["stub", "websearch"]
-SourcingProvider = Literal["stub", "prospeo", "waterfall"]
+SourcingProvider = Literal["stub", "finder", "prospeo", "waterfall"]
 ResearchEngineName = Literal["stub", "dossier", "holo3"]
 WriterProvider = Literal["stub", "openai_compat"]
 ChannelName = Literal["stub", "graph"]
