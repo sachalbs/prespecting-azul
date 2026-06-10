@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from azul.enums import EmailStatus
+from azul.enums import EmailStatus, VerifyStatus
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -22,13 +22,16 @@ class EmailVerification:
     status: EmailStatus
     provider: str
     score: float | None = None
+    # Raw verdict from the in-house verifier (when it ran): VALID/INVALID/CATCH_ALL/UNKNOWN.
+    verdict: VerifyStatus | None = None
     raw: dict[str, Any] = field(default_factory=dict)
     # Curated, provider-agnostic hook material (e.g. role, funding, job postings).
     dossier: dict[str, Any] = field(default_factory=dict)
 
     @property
     def sendable(self) -> bool:
-        return self.status == EmailStatus.VERIFIED
+        # Send policy: only a hard INVALID blocks; catch-all/unknown send flagged.
+        return self.status != EmailStatus.INVALID
 
 
 class EmailVerifier(ABC):

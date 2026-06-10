@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     hunter_api_key: str | None = None
     dropcontact_api_key: str | None = None
 
+    # In-house verifier: SMTP RCPT handshake (needs outbound port 25 — VPS only).
+    # Off by default: syntax + MX checks still run, verdicts cap at UNKNOWN.
+    verify_smtp: bool = False
+
     # Research — Holo3 computer-use (OpenAI-compatible, drives a headless browser)
     hai_api_key: str | None = None
     holo_base_url: str = "https://api.hcompany.ai/v1"

@@ -15,6 +15,15 @@ class EmailStatus(StrEnum):
     INVALID = "invalid"
 
 
+class VerifyStatus(StrEnum):
+    """Raw verdict from the in-house verifier (MX + SMTP handshake)."""
+
+    VALID = "valid"
+    INVALID = "invalid"
+    CATCH_ALL = "catch_all"
+    UNKNOWN = "unknown"
+
+
 class Channel(StrEnum):
     EMAIL = "email"
     LINKEDIN = "linkedin"

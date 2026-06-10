@@ -32,6 +32,7 @@ from azul.enums import (
     MessageStatus,
     ReplySentiment,
     ReviewDecision,
+    VerifyStatus,
 )
 
 
@@ -73,6 +74,11 @@ class Prospect(UUIDMixin, TimestampMixin, Base):
     email_status: Mapped[EmailStatus] = mapped_column(
         _enum(EmailStatus), default=EmailStatus.UNKNOWN
     )
+    # Raw verdict + confidence from the in-house verifier (MX + SMTP handshake).
+    verify_status: Mapped[VerifyStatus | None] = mapped_column(
+        _enum(VerifyStatus), default=None
+    )
+    verify_confidence: Mapped[float | None] = mapped_column(Float, default=None)
     full_name: Mapped[str | None] = mapped_column(String(200), default=None)
     title: Mapped[str | None] = mapped_column(String(200), default=None)
     company: Mapped[str | None] = mapped_column(String(200), default=None)

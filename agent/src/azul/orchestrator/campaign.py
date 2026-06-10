@@ -291,11 +291,17 @@ def _process_rows(
             session, tenant, email=resolved_email, row=row, dossier=state.get("dossier") or {}
         )
         prospect.email_status = email_status
+        prospect.verify_status = state.get("verify_status")
+        prospect.verify_confidence = state.get("verify_confidence")
         membership = _ensure_membership(session, campaign, prospect)
-        if email_status != EmailStatus.VERIFIED:
+        # Send policy: only a hard INVALID (or a masked address) skips.
+        if email_status == EmailStatus.INVALID or "*" in resolved_email:
             membership.status = MembershipStatus.SKIPPED
             log.info("prospect_skipped", email=prospect.email, email_status=email_status)
             continue
+        if email_status != EmailStatus.VERIFIED:
+            # Catch-all / unknown: allowed but flagged — the human sees it at review.
+            log.warning("prospect_flagged", email=prospect.email, email_status=email_status)
 
         research = state.get("research")
         if research is not None:

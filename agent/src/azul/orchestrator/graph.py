@@ -43,13 +43,20 @@ def build_pipeline(
         return {
             "prospect": enriched,
             "email_status": result.status,
+            "verify_status": result.verdict,
+            "verify_confidence": result.score,
             "resolved_email": result.email,
             "dossier": result.dossier,
         }
 
     def route_after_verify(state: ProspectState) -> str:
-        # Deliverability gate: only verified addresses proceed.
-        return "research" if state.get("email_status") == EmailStatus.VERIFIED else "stop"
+        # Deliverability gate: only a hard INVALID (or an unusable address) stops.
+        # Catch-all/unknown proceed — they are flagged, the human decides at review.
+        status = state.get("email_status", EmailStatus.UNKNOWN)
+        email = state.get("resolved_email") or state["prospect"].email
+        if status == EmailStatus.INVALID or not email or "*" in email:
+            return "stop"
+        return "research"
 
     def research_node(state: ProspectState) -> dict[str, Any]:
         return {"research": research_engine.research(state["prospect"])}
