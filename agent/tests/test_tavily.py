@@ -41,6 +41,12 @@ _PRESS: dict[str, Any] = {
             "score": 0.91,
         },
         {
+            "title": "Podcast with Ann Lee",
+            "url": "https://podcast.example/ann",  # a 2nd third-party source corroborates
+            "content": "Ann Lee on usage-based pricing and scaling support.",
+            "score": 0.7,
+        },
+        {
             "title": "Acme blog",
             "url": "https://acme.com/blog/scaling",
             "content": "How we scaled support without scripts.",
@@ -172,3 +178,62 @@ def test_directory_press_result_is_never_a_hook() -> None:
     assert "https://www.trustfolio.co/agences/acme" not in str(urls)  # directory excluded
     assert any("acme.com" in (u or "") for u in urls)  # own-domain hook kept
     assert all("trustfolio" not in (u or "") for u in urls)
+
+
+# ── personal claims need two concordant sources (playbook §2) ────────────────
+
+
+def test_single_third_party_personal_claim_is_dropped() -> None:
+    press = {
+        "results": [
+            {
+                "url": "https://blogtiers.example/ann",  # ONE third-party source only
+                "content": "Ann Lee supposedly founded a fintech before Acme.",
+                "score": 0.9,
+            }
+        ]
+    }
+    with env(TAVILY_API_KEY="k"), respx.mock(base_url="https://api.tavily.com") as router:
+        router.post("/search").mock(
+            side_effect=[httpx.Response(200, json=press), httpx.Response(200, json={"results": []})]
+        )
+        router.post("/extract").mock(return_value=httpx.Response(200, json={"results": []}))
+        result = _mocked_engine().research(_PROSPECT)
+    # Uncorroborated personal claim is not asserted.
+    assert all("supposedly founded" not in h.text for h in result.hooks)
+
+
+def test_two_third_party_sources_corroborate_personal_claim() -> None:
+    press = {
+        "results": [
+            {"url": "https://a.example/ann", "content": "Ann Lee, ex-founder Finch.", "score": 0.9},
+            {
+                "url": "https://b.example/ann",
+                "content": "Ann Lee previously founded Finch.",
+                "score": 0.8,
+            },
+        ]
+    }
+    with env(TAVILY_API_KEY="k"), respx.mock(base_url="https://api.tavily.com") as router:
+        router.post("/search").mock(
+            side_effect=[httpx.Response(200, json=press), httpx.Response(200, json={"results": []})]
+        )
+        router.post("/extract").mock(return_value=httpx.Response(200, json={"results": []}))
+        result = _mocked_engine().research(_PROSPECT)
+    assert any("Finch" in h.text for h in result.hooks)  # corroborated -> citable
+
+
+def test_own_domain_personal_mention_is_always_citable() -> None:
+    # A single source is enough when it's the prospect's OWN site (primary source).
+    press = {
+        "results": [
+            {"url": "https://acme.com/team", "content": "Ann Lee, CEO and founder.", "score": 0.7}
+        ]
+    }
+    with env(TAVILY_API_KEY="k"), respx.mock(base_url="https://api.tavily.com") as router:
+        router.post("/search").mock(
+            side_effect=[httpx.Response(200, json=press), httpx.Response(200, json={"results": []})]
+        )
+        router.post("/extract").mock(return_value=httpx.Response(200, json={"results": []}))
+        result = _mocked_engine().research(_PROSPECT)
+    assert any(h.source_url == "https://acme.com/team" for h in result.hooks)

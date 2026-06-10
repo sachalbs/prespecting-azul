@@ -109,19 +109,9 @@ class TavilyResearchEngine(ResearchEngine):
             if who:
                 press = self._search(f'"{prospect.full_name}" {prospect.company or domain}')
             raw["press"] = press
-            for r in press:
-                content = r.get("content") or ""
-                if not content:
-                    continue
-                hooks.append(
-                    Hook(
-                        text=_snippet(content),
-                        rationale="Web/press mention found by search.",
-                        source_url=r.get("url"),
-                        confidence=min(0.85, float(r.get("score") or 0.0)),
-                    )
-                )
-                sources.append({"url": r.get("url"), "type": "search"})
+            for hook in self._personal_hooks(press, domain, prospect.email):
+                hooks.append(hook)
+                sources.append({"url": hook.source_url, "type": "search"})
 
             # Hiring signals.
             if prospect.company or domain:
@@ -174,6 +164,38 @@ class TavilyResearchEngine(ResearchEngine):
         hooks = self._prioritize(hooks, domain)
         log.info("tavily_done", email=prospect.email, hooks=len(hooks))
         return ResearchResult(engine=self.name, hooks=hooks, sources=sources, raw=raw)
+
+    def _personal_hooks(
+        self, press: list[dict[str, Any]], domain: str | None, email: str
+    ) -> list[Hook]:
+        """Hooks from person-mention results. A PERSONAL claim asserted by a single
+        third-party source is dropped (playbook §2: a personal fact needs two
+        concordant sources). The prospect's OWN domain is a primary source, always
+        citable; directories are never citable."""
+        own: list[Hook] = []
+        third_party: list[Hook] = []
+        third_party_sources: set[str] = set()
+        for r in press:
+            content, url = r.get("content") or "", r.get("url")
+            if not content or is_directory_url(url, self._directories):
+                continue
+            hook = Hook(
+                text=_snippet(content),
+                rationale="Web/press mention found by search.",
+                source_url=url,
+                confidence=min(0.85, float(r.get("score") or 0.0)),
+            )
+            if is_own_domain(url, domain):
+                own.append(hook)
+            else:
+                third_party.append(hook)
+                if url:
+                    third_party_sources.add(str(url))
+        if len(third_party_sources) < 2:
+            if third_party:
+                log.info("personal_claim_uncorroborated_dropped", email=email)
+            return own  # single-source personal claims are not asserted
+        return own + third_party
 
     def _prioritize(self, hooks: list[Hook], domain: str | None) -> list[Hook]:
         """Drop directory-sourced hooks (never citable); the prospect's site leads."""
