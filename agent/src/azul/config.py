@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     # Discovery (web search → leads). Provider TBD (Brave/Serper/Bing) via these.
     search_api_key: str | None = None
     search_api_url: str | None = None
+    # Brief-driven web discovery: cap on Tavily calls (search + extract) per run.
+    discovery_max_searches: int = 15
 
     # Sourcing (Prospeo enrich = find + verify + dossier; Hunter/Dropcontact optional)
     prospeo_api_key: str | None = None
