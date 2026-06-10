@@ -91,6 +91,8 @@ class Prospect(UUIDMixin, TimestampMixin, Base):
     segment: Mapped[str | None] = mapped_column(String(120), index=True, default=None)
     signals: Mapped[dict[str, Any]] = mapped_column(default=dict)
     source: Mapped[str | None] = mapped_column(String(120), default=None)
+    # Inferred outreach language (ISO 639-1), computed once and reused on redraft.
+    target_language: Mapped[str | None] = mapped_column(String(8), default=None)
 
     tenant: Mapped[Tenant] = relationship(back_populates="prospects")
     research: Mapped[list[Research]] = relationship(back_populates="prospect")

@@ -71,6 +71,8 @@ def build_messages(request: DraftRequest) -> list[dict[str, str]]:
         "relationship": request.relationship_note,
         "sender_name": request.sender_name,
         "value_prop": request.value_prop,
+        # Inferred from the brief + the prospect's site (playbook §0 decides the final call).
+        "target_language": request.target_language,
     }
     if request.step > 1:
         context["prior_message"] = request.prior_body

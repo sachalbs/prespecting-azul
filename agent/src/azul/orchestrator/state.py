@@ -16,6 +16,9 @@ class ProspectState(TypedDict):
     value_prop: NotRequired[str | None]
     procedural_hint: NotRequired[str | None]
     relationship_note: NotRequired[str | None]
+    # Language inference: the tenant's targeting hint in, the inferred code out.
+    language_hint: NotRequired[str | None]
+    target_language: NotRequired[str | None]
     # Founder resolution (runs before the finder when no name is known):
     #   "resolved" | "no_founder" | None (skipped because a name was already present)
     resolve_status: NotRequired[str | None]

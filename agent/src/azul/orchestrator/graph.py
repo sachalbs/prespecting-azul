@@ -7,6 +7,7 @@ in-process HITL, it becomes a LangGraph `interrupt()` right after `write` here.
 
 from __future__ import annotations
 
+import json
 from dataclasses import replace
 from typing import Any
 
@@ -97,6 +98,26 @@ def build_pipeline(
     def research_node(state: ProspectState) -> dict[str, Any]:
         return {"research": research_engine.research(state["prospect"])}
 
+    def language_node(state: ProspectState) -> dict[str, Any]:
+        # Inferred once per prospect (LLM); the playbook still makes the final call.
+        if state.get("target_language"):  # already known (e.g. a redraft) — keep it
+            return {}
+        from azul.language import infer_target_language
+
+        brief = state["prospect"]
+        research = state.get("research")
+        site_bits = [
+            brief.company or "",
+            brief.company_domain or "",
+            json.dumps(dict(brief.signals), default=str)[:1500],
+        ]
+        if research is not None:
+            site_bits.append(research.top_hook or "")
+        lang = infer_target_language(
+            brief_hint=state.get("language_hint"), site_text="\n".join(b for b in site_bits if b)
+        )
+        return {"target_language": lang}
+
     def write_node(state: ProspectState) -> dict[str, Any]:
         from azul.writing.linter import lint_draft
 
@@ -112,6 +133,7 @@ def build_pipeline(
                 value_prop=state.get("value_prop"),
                 procedural_hint=state.get("procedural_hint"),
                 relationship_note=state.get("relationship_note"),
+                target_language=state.get("target_language"),
             ),
         )
         return {"draft": draft}
@@ -120,11 +142,13 @@ def build_pipeline(
     graph.add_node("resolve", resolve_node)
     graph.add_node("verify", verify_node)
     graph.add_node("research", research_node)
+    graph.add_node("language", language_node)
     graph.add_node("write", write_node)
 
     graph.add_edge(START, "resolve")
     graph.add_conditional_edges("resolve", route_after_resolve, {"verify": "verify", "stop": END})
     graph.add_conditional_edges("verify", route_after_verify, {"research": "research", "stop": END})
-    graph.add_edge("research", "write")
+    graph.add_edge("research", "language")
+    graph.add_edge("language", "write")
     graph.add_edge("write", END)
     return graph.compile()

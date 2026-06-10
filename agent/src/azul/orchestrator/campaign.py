@@ -244,6 +244,16 @@ def _set_membership(session: Session, message: Message, status: MembershipStatus
 # ── run: source -> research -> write (drafts await human approval) ──────────
 
 
+def _language_hint(session: Session, tenant: Tenant) -> str | None:
+    """The tenant's targeting brief (geo + own words) — feeds language inference."""
+    from azul.discovery.brief import load_latest_brief
+
+    brief = load_latest_brief(session, tenant.id)
+    if brief is None:
+        return None
+    return f"geo: {brief.geo or '-'}; sector: {brief.sector or '-'}; {brief.raw_text}"[:600]
+
+
 def _process_rows(
     session: Session,
     campaign: Campaign,
@@ -257,6 +267,7 @@ def _process_rows(
     pipeline = build_pipeline()
     procedural = ProceduralMemory(session)
     episodic = EpisodicMemory(session)
+    language_hint = _language_hint(session, tenant)
 
     for row in rows:
         existing = _find_prospect(session, tenant, row)
@@ -270,6 +281,10 @@ def _process_rows(
                     "procedural_hint": procedural.hint_for(row.segment),
                     # Relationship memory: our prior history with this person (episodic).
                     "relationship_note": episodic.recall(existing.id) if existing else None,
+                    # Targeting brief context for per-prospect language inference.
+                    "language_hint": language_hint,
+                    # Reuse a previously inferred language (skips a redundant LLM call).
+                    "target_language": existing.target_language if existing else None,
                 }
             )
         except (SourcingError, ResearchError, WritingError) as exc:
@@ -319,6 +334,10 @@ def _process_rows(
         if resolved_given and not prospect.first_name:
             prospect.first_name = resolved_given
             prospect.last_name = resolved_family
+        # Persist the inferred outreach language once (reused on redraft).
+        inferred_language = state.get("target_language")
+        if inferred_language and not prospect.target_language:
+            prospect.target_language = inferred_language
         prospect.email_status = email_status
         prospect.verify_status = state.get("verify_status")
         prospect.verify_confidence = state.get("verify_confidence")

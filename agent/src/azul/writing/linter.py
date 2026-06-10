@@ -16,6 +16,7 @@ from pathlib import Path
 import yaml
 
 from azul.config import get_settings
+from azul.language import detect_language
 from azul.logging import get_logger
 from azul.writing.base import Draft, DraftRequest, Writer
 
@@ -81,11 +82,29 @@ def lint(body: str, rules: StyleRules | None = None) -> list[str]:
     return violations
 
 
+def language_mismatch(body: str, expected: str | None) -> str | None:
+    """A coherence violation string when the draft's language ≠ the expected one."""
+    if not expected:
+        return None  # nothing to enforce against
+    detected = detect_language(body)
+    if detected is None or detected == expected:
+        return None  # match, or too little signal to be sure
+    return f"wrong language: wrote '{detected}', expected '{expected}'"
+
+
+def _issues(body: str, request: DraftRequest, rules: StyleRules) -> list[str]:
+    issues = lint(body, rules)
+    mismatch = language_mismatch(body, request.target_language)
+    if mismatch:
+        issues.append(mismatch)
+    return issues
+
+
 def lint_draft(writer: Writer, request: DraftRequest, rules: StyleRules | None = None) -> Draft:
-    """Write, lint, regenerate on failure (max 2), flag review_required if hopeless."""
+    """Write, lint (style + language coherence), regenerate (max 2), flag if hopeless."""
     rules = rules or get_rules()
     draft = writer.write(request)
-    violations = lint(draft.body, rules)
+    violations = _issues(draft.body, request, rules)
     attempts = 0
     while violations and attempts < _MAX_REGENERATIONS:
         attempts += 1
@@ -93,13 +112,12 @@ def lint_draft(writer: Writer, request: DraftRequest, rules: StyleRules | None =
             "draft_relinted", email=request.prospect.email, attempt=attempts,
             violations=violations,
         )
-        feedback = (
-            "Your previous draft broke these style rules: "
-            + "; ".join(violations)
-            + ". Rewrite the message WITHOUT any of these patterns."
-        )
+        feedback = "Your previous draft had these problems: " + "; ".join(violations) + "."
+        if request.target_language and any(v.startswith("wrong language") for v in violations):
+            feedback += f" Write the ENTIRE message in '{request.target_language}'."
+        feedback += " Rewrite it without any of these issues."
         draft = writer.write(replace(request, lint_feedback=feedback))
-        violations = lint(draft.body, rules)
+        violations = _issues(draft.body, request, rules)
     if violations:
         draft.review_required = True
         log.warning(

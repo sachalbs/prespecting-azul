@@ -25,6 +25,9 @@ class DraftRequest:
     procedural_hint: str | None = None
     # Episodic memory: our prior relationship with THIS person, if any.
     relationship_note: str | None = None
+    # Inferred writing language (ISO 639-1) — the playbook decides, this informs it
+    # and the linter checks the draft is coherent with it.
+    target_language: str | None = None
     # Style-linter feedback for a regeneration pass (negative instruction).
     lint_feedback: str | None = None
 
