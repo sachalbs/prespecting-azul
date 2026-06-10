@@ -46,6 +46,7 @@ from azul.logging import get_logger
 from azul.memory import EpisodicMemory, ProceduralMemory
 from azul.orchestrator.graph import build_pipeline
 from azul.writing import DraftRequest, get_writer
+from azul.writing.linter import lint_draft
 
 log = get_logger(__name__)
 
@@ -342,6 +343,7 @@ def _process_rows(
                     subject=draft.subject,
                     body=draft.body,
                     status=MessageStatus.DRAFT,
+                    review_required=draft.review_required,
                     dedup_key=dedup_key,
                 )
             )
@@ -572,7 +574,8 @@ def generate_followups(
         if session.scalars(select(Message).where(Message.dedup_key == dedup_key)).first():
             continue  # idempotent
         prospect = m.prospect
-        draft = writer.write(
+        draft = lint_draft(
+            writer,
             DraftRequest(
                 prospect=_brief_from_prospect(prospect),
                 hook=None,
@@ -580,7 +583,7 @@ def generate_followups(
                 prior_body=m.final_body,
                 sender_name=sender_name,
                 value_prop=value_prop,
-            )
+            ),
         )
         subject = f"Re: {m.subject}" if m.subject else draft.subject
         session.add(
@@ -598,6 +601,7 @@ def generate_followups(
                 subject=subject,
                 body=draft.body,
                 status=MessageStatus.DRAFT,
+                review_required=draft.review_required,
                 dedup_key=dedup_key,
             )
         )

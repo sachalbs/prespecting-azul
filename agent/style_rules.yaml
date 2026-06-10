@@ -1,0 +1,17 @@
+# Anti-slop style rules — enforced deterministically after every generation.
+# A draft matching any of these is regenerated (max 2 times) with the offending
+# pattern as a negative instruction, then flagged review_required if hopeless.
+
+forbidden_patterns:
+  - "—"                              # em dash, the AI tell
+  - "j'espère que vous allez bien"
+  - "je me permets"
+  - "je reviens vers vous"
+  - "n'hésitez pas"
+  - "révolutionner"
+  - "naviguer"
+  - "paysage"
+  - "synergie"
+
+max_words: 120
+max_questions: 1

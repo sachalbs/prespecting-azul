@@ -62,9 +62,12 @@ def build_pipeline(
         return {"research": research_engine.research(state["prospect"])}
 
     def write_node(state: ProspectState) -> dict[str, Any]:
+        from azul.writing.linter import lint_draft
+
         research = state.get("research")
         hook = research.top_hook if research else None
-        draft = writer.write(
+        draft = lint_draft(
+            writer,
             DraftRequest(
                 prospect=state["prospect"],
                 hook=hook,
@@ -73,7 +76,7 @@ def build_pipeline(
                 value_prop=state.get("value_prop"),
                 procedural_hint=state.get("procedural_hint"),
                 relationship_note=state.get("relationship_note"),
-            )
+            ),
         )
         return {"draft": draft}
 

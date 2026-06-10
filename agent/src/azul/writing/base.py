@@ -25,6 +25,8 @@ class DraftRequest:
     procedural_hint: str | None = None
     # Episodic memory: our prior relationship with THIS person, if any.
     relationship_note: str | None = None
+    # Style-linter feedback for a regeneration pass (negative instruction).
+    lint_feedback: str | None = None
 
 
 @dataclass
@@ -34,6 +36,8 @@ class Draft:
     angle: str | None = None
     # Which taxonomy bucket the hook belongs to (learning log).
     hook_type: HookType | None = None
+    # Set by the style linter when 2 regenerations still violate the rules.
+    review_required: bool = False
 
 
 class Writer(ABC):

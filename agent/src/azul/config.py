@@ -69,6 +69,8 @@ class Settings(BaseSettings):
     writer_model: str = "deepseek-chat"
     writer_temperature: float = 0.7
     writer_playbook_path: str = "AZUL_COLD_OUTREACH_PLAYBOOK.md"
+    # Deterministic anti-slop style rules for the post-generation linter.
+    style_rules_path: str = "style_rules.yaml"
 
     # Connector — Microsoft Graph (Outlook), send from the real mailbox + poll replies
     graph_client_id: str | None = None

@@ -78,6 +78,8 @@ def build_messages(request: DraftRequest) -> list[dict[str, str]]:
         )
     else:
         instruction = f"Write one outbound {request.channel} message. Anchor it on the hook."
+    if request.lint_feedback:
+        instruction += " " + request.lint_feedback
     user = instruction + "\n\n" + json.dumps(context, ensure_ascii=False, indent=2, default=str)
     return [
         {"role": "system", "content": system_prompt()},

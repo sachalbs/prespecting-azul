@@ -17,6 +17,8 @@ dependencies = [
     "tenacity>=9.0",
     # In-house email verification (MX lookups; the SMTP handshake is stdlib smtplib)
     "dnspython>=2.6",
+    # Style-linter rules (style_rules.yaml)
+    "pyyaml>=6.0",
     # Config / secrets (env-only) + typed models
     "pydantic>=2.8",
     "pydantic-settings>=2.4",

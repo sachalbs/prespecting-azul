@@ -157,6 +157,8 @@ class Message(UUIDMixin, TimestampMixin, Base):
     subject: Mapped[str | None] = mapped_column(String(400), default=None)
     body: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[MessageStatus] = mapped_column(_enum(MessageStatus), default=MessageStatus.DRAFT)
+    # Style linter gave up after 2 regenerations — human must look twice.
+    review_required: Mapped[bool] = mapped_column(Boolean, default=False)
     dedup_key: Mapped[str] = mapped_column(String(200))
 
     # Human-in-the-loop capture
