@@ -224,6 +224,29 @@ class Skill(UUIDMixin, TimestampMixin, Base):
     )
 
 
+class GlobalPattern(UUIDMixin, TimestampMixin, Base):
+    """De-identified cross-tenant aggregates: segment × hook_type × timing → counts.
+
+    De-identified BY CONSTRUCTION: no FK to prospects/tenants, no free-text
+    column — only categorical labels and counters. Migrated empty in v0; the
+    curator stays a stub until real outcomes exist.
+    """
+
+    __tablename__ = "global_patterns"
+    __table_args__ = (
+        UniqueConstraint(
+            "segment", "hook_type", "send_dow", "send_hour_bucket", name="uq_global_pattern"
+        ),
+    )
+
+    segment: Mapped[str] = mapped_column(String(120), index=True)
+    hook_type: Mapped[HookType] = mapped_column(_enum(HookType))
+    send_dow: Mapped[int] = mapped_column(Integer)  # 0=Monday … 6=Sunday
+    send_hour_bucket: Mapped[int] = mapped_column(Integer)  # 0-5 (4-hour buckets)
+    n_sent: Mapped[int] = mapped_column(Integer, default=0)
+    n_replied: Mapped[int] = mapped_column(Integer, default=0)
+
+
 class ConnectedAccount(UUIDMixin, TimestampMixin, Base):
     """Per-tenant OAuth credentials for a connected mailbox/channel (multi-tenant)."""
 
