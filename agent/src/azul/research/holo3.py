@@ -56,11 +56,75 @@ top-left):
   scroll           {"direction":"up"|"down"}
   key              {"key":"Enter"}
   drag_and_drop    {"start":[x,y],"end":[x,y]}
+  goto             {"url":str}                  (navigate directly to a URL)
   screenshot_request {}                          (ask for a fresh screenshot)
   task_complete    {"hooks":[{"text":str,"rationale":str,"source_url":str}]}
 
 Call task_complete with 1-3 hooks as soon as you have enough. JSON only.
 """
+
+
+_MAX_CORRECTIONS = 2  # invalid replies tolerated before falling back to hooks=[]
+
+# A fine-tuned computer-use model often speaks its own action dialect; map the
+# probable aliases onto our canonical schema instead of failing the prospect.
+_ACTION_ALIASES = {
+    "left_click": "click",
+    "double_click": "click",
+    "mouse_click": "click",
+    "tap": "click",
+    "type_text": "type",
+    "input_text": "type",
+    "write": "type",
+    "press_key": "key",
+    "keypress": "key",
+    "press": "key",
+    "hotkey": "key",
+    "wheel": "scroll",
+    "scroll_up": "scroll",
+    "scroll_down": "scroll",
+    "drag": "drag_and_drop",
+    "navigate": "goto",
+    "open_url": "goto",
+    "open": "goto",
+    "finish": "task_complete",
+    "done": "task_complete",
+    "stop": "task_complete",
+    "screenshot": "screenshot_request",
+    "take_screenshot": "screenshot_request",
+}
+
+_KNOWN_ACTIONS = (
+    "click",
+    "type",
+    "scroll",
+    "key",
+    "drag_and_drop",
+    "goto",
+    "screenshot_request",
+    "task_complete",
+)
+
+
+def normalize_action(name: str, args: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    """Canonical action name + args (scroll_up/down carry their direction)."""
+    raw = name.strip().lower()
+    canonical = _ACTION_ALIASES.get(raw, raw)
+    if raw == "scroll_up":
+        args = {**args, "direction": "up"}
+    elif raw == "scroll_down":
+        args = {**args, "direction": "down"}
+    return canonical, args
+
+
+def _correction(error: Exception) -> dict[str, Any]:
+    return {
+        "role": "user",
+        "content": (
+            f"Your last reply was invalid: {error}. Reply with ONE JSON object exactly "
+            f"per the schema. Valid actions: {', '.join(_KNOWN_ACTIONS)}."
+        ),
+    }
 
 
 @dataclass
@@ -85,7 +149,8 @@ def parse_holo_message(message: dict[str, Any]) -> HoloAction:
         fn = tool_calls[0]["function"]
         raw_args = fn.get("arguments") or {}
         args = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
-        return HoloAction(name=fn["name"], args=args or {})
+        name, args = normalize_action(fn["name"], args or {})
+        return HoloAction(name=name, args=args)
 
     content = message.get("content") or ""
     try:
@@ -100,6 +165,7 @@ def parse_holo_message(message: dict[str, Any]) -> HoloAction:
     args = call.get("arguments")
     if args is None:
         args = {k: v for k, v in call.items() if k not in ("name", "action")}
+    name, args = normalize_action(str(name), args)
     return HoloAction(name=name, args=args, note=obj.get("note"), thought=obj.get("thought"))
 
 
@@ -183,6 +249,11 @@ class Holo3ResearchEngine(ResearchEngine):
             page.mouse.down()
             page.mouse.move(x2 / _COORD_SCALE * w, y2 / _COORD_SCALE * h)
             page.mouse.up()
+        elif name == "goto":
+            url = args.get("url") or args.get("href") or args.get("text")
+            if not url:
+                raise ResearchError(f"goto needs a url, got: {args}")
+            page.goto(str(url), wait_until="domcontentloaded")
         else:
             raise ResearchError(f"Unknown Holo action: {name}")
 
@@ -265,6 +336,7 @@ class Holo3ResearchEngine(ResearchEngine):
                     self._screenshot_message(page, "Current screen. Next action?"),
                 ]
 
+                corrections = 0
                 for _ in range(self._max_steps):
                     if time.monotonic() > deadline:
                         log.warning("holo_timeout", email=prospect.email)
@@ -272,9 +344,21 @@ class Holo3ResearchEngine(ResearchEngine):
                     message = self._next_message(messages)
                     try:
                         action = parse_holo_message(message)
-                    except ResearchError:
-                        log.error("holo_parse_failed", email=prospect.email, raw=str(message)[:800])
-                        raise
+                    except ResearchError as exc:
+                        # Invalid reply: tell the model what was wrong (max 2 times),
+                        # then give up on THIS prospect with hooks=[] — never raise.
+                        corrections += 1
+                        if corrections > _MAX_CORRECTIONS:
+                            log.error(
+                                "holo_parse_failed", email=prospect.email, raw=str(message)[:800]
+                            )
+                            break
+                        log.warning(
+                            "holo_correction", email=prospect.email, attempt=corrections,
+                            error=str(exc),
+                        )
+                        messages.append(_correction(exc))
+                        continue
                     transcript.append({"action": action.name, "args": action.args})
 
                     if action.name == "task_complete":
@@ -288,7 +372,21 @@ class Holo3ResearchEngine(ResearchEngine):
                         )
 
                     if action.name != "screenshot_request":
-                        self._execute(page, action)
+                        try:
+                            self._execute(page, action)
+                        except ResearchError as exc:
+                            corrections += 1
+                            if corrections > _MAX_CORRECTIONS:
+                                log.error(
+                                    "holo_action_failed", email=prospect.email, error=str(exc)
+                                )
+                                break
+                            log.warning(
+                                "holo_correction", email=prospect.email, attempt=corrections,
+                                error=str(exc),
+                            )
+                            messages.append(_correction(exc))
+                            continue
                         sources.append({"url": page.url})
                     messages.append({"role": "assistant", "content": json.dumps(action.args)})
                     messages.append(self._screenshot_message(page, "Result. Next action?"))
