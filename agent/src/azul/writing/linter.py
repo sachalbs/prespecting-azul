@@ -34,6 +34,8 @@ DEFAULT_FORBIDDEN = [
     "naviguer",
     "paysage",
     "synergie",
+    "calendly",  # no meeting link before the prospect shows interest
+    "je n'ai pas eu de retour",  # negative CTA kills replies
 ]
 DEFAULT_MAX_WORDS = 120
 DEFAULT_MAX_QUESTIONS = 1

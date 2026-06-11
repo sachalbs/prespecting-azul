@@ -12,6 +12,8 @@ forbidden_patterns:
   - "naviguer"
   - "paysage"
   - "synergie"
+  - "calendly"                       # no meeting link before interest (§3bis)
+  - "je n'ai pas eu de retour"       # negative CTA kills replies (§3bis)
 
 max_words: 120
 max_questions: 1
