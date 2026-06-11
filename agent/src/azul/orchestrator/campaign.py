@@ -268,6 +268,7 @@ def _process_rows(
     procedural = ProceduralMemory(session)
     episodic = EpisodicMemory(session)
     language_hint = _language_hint(session, tenant)
+    hook_strengths: list[float] = []
 
     for row in rows:
         existing = _find_prospect(session, tenant, row)
@@ -351,15 +352,18 @@ def _process_rows(
             # Catch-all / unknown: allowed but flagged — the human sees it at review.
             log.warning("prospect_flagged", email=prospect.email, email_status=email_status)
 
+        weak_hook = bool(state.get("weak_hook", False))
         research = state.get("research")
         if research is not None:
+            hook_strengths.extend(h.strength for h in research.hooks if h.strength is not None)
             session.add(
                 Research(
                     prospect_id=prospect.id,
                     campaign_id=campaign.id,
                     engine=research.engine,
                     tier=research.tier,
-                    top_hook=research.top_hook,
+                    # The selected (strongest above-bar) hook; None when all fell short.
+                    top_hook=state.get("selected_hook"),
                     hooks=[h.as_dict() for h in research.hooks],
                     sources=research.sources,
                     raw=research.raw,
@@ -391,11 +395,29 @@ def _process_rows(
                     body=draft.body,
                     status=MessageStatus.DRAFT,
                     review_required=draft.review_required,
+                    weak_hook=weak_hook,
                     dedup_key=dedup_key,
                 )
             )
         membership.status = MembershipStatus.DRAFTED
-        log.info("draft_ready", email=prospect.email, angle=draft.angle)
+        log.info("draft_ready", email=prospect.email, angle=draft.angle, weak_hook=weak_hook)
+
+    _log_hook_distribution(campaign, hook_strengths)
+
+
+def _log_hook_distribution(campaign: Campaign, strengths: list[float]) -> None:
+    """Strong/medium/weak hook ratio for the batch — visibility on signal quality."""
+    strong = sum(1 for s in strengths if s >= 0.7)
+    medium = sum(1 for s in strengths if 0.5 <= s < 0.7)
+    weak = sum(1 for s in strengths if s < 0.5)
+    log.info(
+        "hook_strength_distribution",
+        campaign_id=str(campaign.id),
+        hooks=len(strengths),
+        strong=strong,
+        medium=medium,
+        weak=weak,
+    )
 
 
 def run_campaign(
@@ -610,9 +632,12 @@ def redraft_campaign(
     hook — it never re-runs the resolver, finder or research. Only untouched DRAFTs
     are rewritten; approved/sent messages and human-edited drafts are left alone.
     """
+    from azul.research.base import Hook
+    from azul.research.hook_scorer import select_hook
     from azul.writing.linter import lint_draft
 
     writer = get_writer()
+    min_score = get_settings().hook_min_score
     drafts = session.scalars(
         select(Message).where(
             Message.campaign_id == campaign_id,
@@ -630,14 +655,18 @@ def redraft_campaign(
             .where(Research.prospect_id == prospect.id, Research.campaign_id == campaign_id)
             .order_by(Research.created_at.desc())
         ).first()
+        # Reuse the persisted hook scores — no re-scoring, no re-research.
+        stored = [Hook(**h) for h in (research.hooks if research else [])]
+        selected, weak, _ = select_hook(stored, min_score) if stored else (None, True, None)
         draft = lint_draft(
             writer,
             DraftRequest(
                 prospect=_brief_from_prospect(prospect),
-                hook=research.top_hook if research else None,
+                hook=None if weak else selected,
                 sender_name=sender_name,
                 value_prop=value_prop,
                 target_language=prospect.target_language,
+                weak_hook=weak,
             ),
         )
         m.angle = draft.angle
@@ -647,6 +676,7 @@ def redraft_campaign(
         m.word_count = len(draft.body.split())
         m.body = draft.body
         m.review_required = draft.review_required
+        m.weak_hook = weak
         count += 1
     session.flush()
     log.info("redrafted", campaign_id=str(campaign_id), count=count)

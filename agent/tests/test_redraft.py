@@ -16,7 +16,11 @@ from azul.orchestrator import campaign as camp
 from azul.orchestrator.graph import build_pipeline
 from azul.writing.base import Draft, DraftRequest, Writer
 
-CSV = "email,full_name,company,segment\nann@acme.fr,Ann Roy,Acme,saas\n"
+# A real signal so the stub research yields a strong hook (strength >= 0.5).
+CSV = (
+    "email,full_name,company,segment,recent_signal\n"
+    "ann@acme.fr,Ann Roy,Acme,saas,Just raised a seed round\n"
+)
 
 
 class _TaggedWriter(Writer):

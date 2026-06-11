@@ -80,8 +80,21 @@ def build_messages(request: DraftRequest) -> list[dict[str, str]]:
             f"Write follow-up #{request.step} (they didn't reply). Keep it shorter than the "
             "first, reference the prior note lightly, add ONE new angle, no guilt-trip."
         )
+    elif request.weak_hook:
+        # No strong, specific signal was found — do NOT pretend to have spotted one.
+        instruction = (
+            f"Write one outbound {request.channel} message. No strong specific signal was "
+            "found on this prospect, so do NOT invent or claim one. Open soberly on their "
+            "métier/positioning (what they do, who they serve) and bridge to the offer "
+            "honestly. Never build the message around a minor technical detail (SEO, alt "
+            "tag, typo)."
+        )
     else:
-        instruction = f"Write one outbound {request.channel} message. Anchor it on the hook."
+        instruction = (
+            f"Write one outbound {request.channel} message. Anchor it on the hook — the "
+            "strongest, freshest, most specific signal. Never make a minor technical detail "
+            "(SEO, alt tag, typo) the main hook or the bridge to the offer."
+        )
     if request.lint_feedback:
         instruction += " " + request.lint_feedback
     user = instruction + "\n\n" + json.dumps(context, ensure_ascii=False, indent=2, default=str)

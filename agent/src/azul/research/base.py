@@ -17,6 +17,9 @@ class Hook:
     rationale: str | None = None
     source_url: str | None = None
     confidence: float | None = None
+    # Hook-strength score (0-1) + why — freshness × specificity × offer-relevance.
+    strength: float | None = None
+    strength_reason: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -24,6 +27,8 @@ class Hook:
             "rationale": self.rationale,
             "source_url": self.source_url,
             "confidence": self.confidence,
+            "strength": self.strength,
+            "strength_reason": self.strength_reason,
         }
 
 

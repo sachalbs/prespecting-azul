@@ -56,6 +56,8 @@ class Settings(BaseSettings):
     tavily_api_key: str | None = None
     # Tiered router: escalate to Holo when tier 1 yields <2 hooks at this confidence.
     research_tier_threshold: float = 0.6
+    # Below this hook-strength score, don't force a hook — use a sober angle.
+    hook_min_score: float = 0.5
     # Directory/aggregator domains: usable to FIND a prospect, never citable as a
     # hook source in the email (citing an annuaire = lazy research).
     directory_domains: str = (

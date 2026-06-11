@@ -28,6 +28,8 @@ class DraftRequest:
     # Inferred writing language (ISO 639-1) — the playbook decides, this informs it
     # and the linter checks the draft is coherent with it.
     target_language: str | None = None
+    # No hook cleared the strength bar: write a sober angle, claim no precise signal.
+    weak_hook: bool = False
     # Style-linter feedback for a regeneration pass (negative instruction).
     lint_feedback: str | None = None
 

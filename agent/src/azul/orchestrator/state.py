@@ -19,6 +19,10 @@ class ProspectState(TypedDict):
     # Language inference: the tenant's targeting hint in, the inferred code out.
     language_hint: NotRequired[str | None]
     target_language: NotRequired[str | None]
+    # Hook selection: the strongest hook above threshold (or None), and whether
+    # everything fell short (sober-angle fallback).
+    selected_hook: NotRequired[str | None]
+    weak_hook: NotRequired[bool]
     # Founder resolution (runs before the finder when no name is known):
     #   "resolved" | "no_founder" | None (skipped because a name was already present)
     resolve_status: NotRequired[str | None]

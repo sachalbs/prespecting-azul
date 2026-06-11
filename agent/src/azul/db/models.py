@@ -165,6 +165,8 @@ class Message(UUIDMixin, TimestampMixin, Base):
     status: Mapped[MessageStatus] = mapped_column(_enum(MessageStatus), default=MessageStatus.DRAFT)
     # Style linter gave up after 2 regenerations — human must look twice.
     review_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    # No hook cleared the strength bar — sober angle, flagged for review.
+    weak_hook: Mapped[bool] = mapped_column(Boolean, default=False)
     dedup_key: Mapped[str] = mapped_column(String(200))
 
     # Human-in-the-loop capture

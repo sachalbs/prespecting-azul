@@ -98,6 +98,24 @@ def build_pipeline(
     def research_node(state: ProspectState) -> dict[str, Any]:
         return {"research": research_engine.research(state["prospect"])}
 
+    def score_node(state: ProspectState) -> dict[str, Any]:
+        # Score each hook's strength; select the strongest above the bar, else
+        # flag weak_hook so the writer falls back to a sober angle (no forced link).
+        from azul.config import get_settings
+        from azul.research.hook_scorer import score_hooks, select_hook
+
+        research = state.get("research")
+        if research is None or not research.hooks:
+            return {"selected_hook": None, "weak_hook": True}
+        brief = state["prospect"]
+        score_hooks(
+            research.hooks,
+            offer=state.get("value_prop"),
+            prospect_label=" ".join(filter(None, [brief.company, brief.title])) or brief.email,
+        )
+        selected, weak, _ = select_hook(research.hooks, get_settings().hook_min_score)
+        return {"selected_hook": selected, "weak_hook": weak}
+
     def language_node(state: ProspectState) -> dict[str, Any]:
         # Inferred once per prospect (LLM); the playbook still makes the final call.
         if state.get("target_language"):  # already known (e.g. a redraft) — keep it
@@ -121,19 +139,19 @@ def build_pipeline(
     def write_node(state: ProspectState) -> dict[str, Any]:
         from azul.writing.linter import lint_draft
 
-        research = state.get("research")
-        hook = research.top_hook if research else None
+        weak = state.get("weak_hook", False)
         draft = lint_draft(
             writer,
             DraftRequest(
                 prospect=state["prospect"],
-                hook=hook,
+                hook=None if weak else state.get("selected_hook"),
                 channel="email",
                 sender_name=state.get("sender_name"),
                 value_prop=state.get("value_prop"),
                 procedural_hint=state.get("procedural_hint"),
                 relationship_note=state.get("relationship_note"),
                 target_language=state.get("target_language"),
+                weak_hook=weak,
             ),
         )
         return {"draft": draft}
@@ -142,13 +160,15 @@ def build_pipeline(
     graph.add_node("resolve", resolve_node)
     graph.add_node("verify", verify_node)
     graph.add_node("research", research_node)
+    graph.add_node("score", score_node)
     graph.add_node("language", language_node)
     graph.add_node("write", write_node)
 
     graph.add_edge(START, "resolve")
     graph.add_conditional_edges("resolve", route_after_resolve, {"verify": "verify", "stop": END})
     graph.add_conditional_edges("verify", route_after_verify, {"research": "research", "stop": END})
-    graph.add_edge("research", "language")
+    graph.add_edge("research", "score")
+    graph.add_edge("score", "language")
     graph.add_edge("language", "write")
     graph.add_edge("write", END)
     return graph.compile()
