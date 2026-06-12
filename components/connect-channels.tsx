@@ -133,13 +133,26 @@ export function ConnectChannels() {
       {/* action panel: re-enters on every change of mind */}
       <div className="enter mt-8" style={{ "--d": "420ms" } as CSSProperties}>
         {selected === null ? (
-          <div className="grid-paper flex min-h-[8.5rem] items-center border border-line bg-panel px-6 sm:px-8">
-            <p className="font-mono text-[0.74rem] uppercase tracking-[0.14em] text-muted">
-              <span className="text-ink">azul</span> // {c.pick}
-              <span
-                aria-hidden
-                className="ml-1.5 inline-block h-[0.78em] w-[7px] translate-y-[0.08em] animate-blink bg-cobalt align-baseline"
-              />
+          <div className="grid-paper flex min-h-[8.5rem] items-center gap-4 border border-line bg-panel px-6 sm:px-8">
+            <span
+              aria-hidden
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cobalt text-white motion-safe:animate-bounce"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-5 w-5"
+              >
+                <path d="M12 19V5" />
+                <path d="m6 11 6-6 6 6" />
+              </svg>
+            </span>
+            <p className="font-display text-[1.2rem] font-bold tracking-[-0.01em] text-ink sm:text-[1.35rem]">
+              {c.pick}
             </p>
           </div>
         ) : (
