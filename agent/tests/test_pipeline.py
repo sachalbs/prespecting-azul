@@ -65,9 +65,11 @@ def test_followups_drafted_for_non_repliers(tmp_path: Path) -> None:
     with session_scope() as s:
         camp.send_approved(s, campaign_id=cid)
     with session_scope() as s:
-        assert camp.generate_followups(s, campaign_id=cid) == 1  # the sent, non-replied one
+        # delay_days=0: this test covers selection (sent + silent), not the delay
+        # gate, which has its own tests in test_followups.py.
+        assert camp.generate_followups(s, campaign_id=cid, delay_days=0) == 1
     with session_scope() as s:
-        assert camp.generate_followups(s, campaign_id=cid) == 0  # idempotent
+        assert camp.generate_followups(s, campaign_id=cid, delay_days=0) == 0  # idempotent
 
 
 def test_rerun_upserts_prospects(tmp_path: Path) -> None:

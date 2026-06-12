@@ -14,13 +14,14 @@ import time
 import uuid
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from azul.config import get_settings
 from azul.connectors import OutboundMessage, get_channel
+from azul.costs import cost_context
 from azul.db.models import (
     Campaign,
     CampaignProspect,
@@ -63,6 +64,11 @@ KNOWN_COLS = {
 
 def _now() -> datetime:
     return datetime.now(tz=UTC)
+
+
+def _as_utc(dt: datetime) -> datetime:
+    """sqlite returns naive datetimes; we store UTC, so re-attach it for math."""
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
 
 
 # ── CSV loading ─────────────────────────────────────────────────────────────
@@ -273,21 +279,28 @@ def _process_rows(
     for row in rows:
         existing = _find_prospect(session, tenant, row)
         try:
-            state = pipeline.invoke(
-                {
-                    "prospect": _brief_from_row(row),
-                    "sender_name": sender_name,
-                    "value_prop": value_prop,
-                    # Flywheel: what's worked for this segment (procedural memory).
-                    "procedural_hint": procedural.hint_for(row.segment),
-                    # Relationship memory: our prior history with this person (episodic).
-                    "relationship_note": episodic.recall(existing.id) if existing else None,
-                    # Targeting brief context for per-prospect language inference.
-                    "language_hint": language_hint,
-                    # Reuse a previously inferred language (skips a redundant LLM call).
-                    "target_language": existing.target_language if existing else None,
-                }
-            )
+            # Cost attribution: the prospect row may not exist yet (research/draft
+            # run before the upsert), so attribute by label + campaign.
+            with cost_context(
+                campaign_id=campaign.id,
+                prospect_id=existing.id if existing else None,
+                prospect_label=row.email or row.company or row.full_name,
+            ):
+                state = pipeline.invoke(
+                    {
+                        "prospect": _brief_from_row(row),
+                        "sender_name": sender_name,
+                        "value_prop": value_prop,
+                        # Flywheel: what's worked for this segment (procedural memory).
+                        "procedural_hint": procedural.hint_for(row.segment),
+                        # Relationship memory: our prior history with this person (episodic).
+                        "relationship_note": episodic.recall(existing.id) if existing else None,
+                        # Targeting brief context for per-prospect language inference.
+                        "language_hint": language_hint,
+                        # Reuse a previously inferred language (skips a redundant LLM call).
+                        "target_language": existing.target_language if existing else None,
+                    }
+                )
         except (SourcingError, ResearchError, WritingError) as exc:
             # One bad prospect must never roll back the whole campaign.
             log.error(
@@ -571,6 +584,17 @@ def send_approved(session: Session, *, campaign_id: uuid.UUID, dry_run: bool = F
         or 0
     )
 
+    # A reply may have landed between approval and send: never follow up a
+    # prospect who answered. (First touches are unaffected — you can't reply
+    # before any send.)
+    replied_prospects = set(
+        session.scalars(
+            select(Message.prospect_id)
+            .join(Outcome, Outcome.message_id == Message.id)
+            .where(Message.campaign_id == campaign_id, Outcome.replied.is_(True))
+        )
+    )
+
     sent = 0
     for i, m in enumerate(messages):
         if sent_today + sent >= settings.daily_send_cap:
@@ -579,6 +603,12 @@ def send_approved(session: Session, *, campaign_id: uuid.UUID, dry_run: bool = F
             )
             break
         if m.external_id:  # idempotent: already sent
+            continue
+        if m.step > 1 and m.prospect_id in replied_prospects:
+            m.status = MessageStatus.SKIPPED
+            m.error = "cancelled: prospect replied before the follow-up went out"
+            log.info("followup_cancelled", to=m.prospect.email, step=m.step)
+            session.commit()
             continue
         out = OutboundMessage(
             channel=m.channel,
@@ -599,6 +629,8 @@ def send_approved(session: Session, *, campaign_id: uuid.UUID, dry_run: bool = F
             session.commit()
             continue
         m.external_id = result.external_id
+        # Provider thread id (Graph conversationId): lets sync-replies match by thread.
+        m.conversation_id = str(result.raw.get("conversationId") or "") or None
         m.status = MessageStatus.SENT
         m.sent_at = _now()
         _set_membership(session, m, MembershipStatus.SENT)
@@ -658,17 +690,20 @@ def redraft_campaign(
         # Reuse the persisted hook scores — no re-scoring, no re-research.
         stored = [Hook(**h) for h in (research.hooks if research else [])]
         selected, weak, _ = select_hook(stored, min_score) if stored else (None, True, None)
-        draft = lint_draft(
-            writer,
-            DraftRequest(
-                prospect=_brief_from_prospect(prospect),
-                hook=None if weak else selected,
-                sender_name=sender_name,
-                value_prop=value_prop,
-                target_language=prospect.target_language,
-                weak_hook=weak,
-            ),
-        )
+        with cost_context(
+            campaign_id=campaign_id, prospect_id=prospect.id, prospect_label=prospect.email
+        ):
+            draft = lint_draft(
+                writer,
+                DraftRequest(
+                    prospect=_brief_from_prospect(prospect),
+                    hook=None if weak else selected,
+                    sender_name=sender_name,
+                    value_prop=value_prop,
+                    target_language=prospect.target_language,
+                    weak_hook=weak,
+                ),
+            )
         m.angle = draft.angle
         m.hook_type = draft.hook_type
         m.subject = draft.subject
@@ -683,7 +718,7 @@ def redraft_campaign(
     return count
 
 
-# ── follow-up (one relance for non-repliers, as a child message) ───────────
+# ── follow-ups (relances for non-repliers — drafted, never auto-sent) ───────
 
 
 def generate_followups(
@@ -692,43 +727,80 @@ def generate_followups(
     campaign_id: uuid.UUID,
     sender_name: str | None = None,
     value_prop: str | None = None,
+    delay_days: int | None = None,
+    max_followups: int | None = None,
+    now: datetime | None = None,
 ) -> int:
-    """Draft a step-2 follow-up for each sent prospect who hasn't replied/bounced."""
+    """Draft the next relance for each prospect who is still silent.
+
+    Eligibility (all required):
+    - last touch SENT >= FOLLOWUP_DELAY_DAYS ago (env, default 4);
+    - no reply and no bounce on ANY touch of this prospect in the campaign;
+    - fewer than MAX_FOLLOWUPS relances already (env, default 2).
+
+    The relance is a child Message (parent_message_id + step), goes through the
+    writer + linter like any draft, and lands in DRAFT — the human approves it
+    via the normal `approve` -> `send-approved` gates. Idempotent per step.
+    """
+    settings = get_settings()
+    delay = timedelta(days=settings.followup_delay_days if delay_days is None else delay_days)
+    cap = settings.max_followups if max_followups is None else max_followups
+    max_step = 1 + cap  # touches: 1 first email + cap relances
+    now = now or _now()
     writer = get_writer()
-    step1 = session.scalars(
-        select(Message).where(
-            Message.campaign_id == campaign_id,
-            Message.step == 1,
-            Message.status == MessageStatus.SENT,
-        )
+
+    # Last SENT touch per prospect (highest step), plus who replied/bounced.
+    sent_msgs = session.scalars(
+        select(Message)
+        .where(Message.campaign_id == campaign_id, Message.status == MessageStatus.SENT)
+        .order_by(Message.step)
     ).all()
+    last_by_prospect: dict[uuid.UUID, Message] = {}
+    for m in sent_msgs:
+        last_by_prospect[m.prospect_id] = m  # ordered by step: keeps the highest
+    closed_prospects = {
+        m.prospect_id
+        for m in sent_msgs
+        if any(o.replied or o.bounced for o in m.outcomes)
+    }
+
     created = 0
-    for m in step1:
-        if any(o.replied or o.bounced for o in m.outcomes):
-            continue
-        dedup_key = f"{m.tenant_id}:{m.prospect_id}:2"
+    for prospect_id, last in last_by_prospect.items():
+        if prospect_id in closed_prospects:
+            continue  # they answered (or bounced): the thread is closed
+        if last.step >= max_step:
+            continue  # cap reached: stop, no exception
+        if last.sent_at is None or now - _as_utc(last.sent_at) < delay:
+            continue  # too early: the silence isn't old enough yet
+        next_step = last.step + 1
+        dedup_key = f"{last.tenant_id}:{prospect_id}:{next_step}"
         if session.scalars(select(Message).where(Message.dedup_key == dedup_key)).first():
-            continue  # idempotent
-        prospect = m.prospect
-        draft = lint_draft(
-            writer,
-            DraftRequest(
-                prospect=_brief_from_prospect(prospect),
-                hook=None,
-                step=2,
-                prior_body=m.final_body,
-                sender_name=sender_name,
-                value_prop=value_prop,
-            ),
-        )
-        subject = f"Re: {m.subject}" if m.subject else draft.subject
+            continue  # idempotent: this relance was already drafted
+        prospect = last.prospect
+        with cost_context(
+            campaign_id=campaign_id, prospect_id=prospect.id, prospect_label=prospect.email
+        ):
+            draft = lint_draft(
+                writer,
+                DraftRequest(
+                    prospect=_brief_from_prospect(prospect),
+                    hook=None,
+                    step=next_step,
+                    prior_body=last.final_body,
+                    sender_name=sender_name,
+                    value_prop=value_prop,
+                    target_language=prospect.target_language,
+                ),
+            )
+        root_subject = last.subject.removeprefix("Re: ") if last.subject else None
+        subject = f"Re: {root_subject}" if root_subject else draft.subject
         session.add(
             Message(
-                tenant_id=m.tenant_id,
+                tenant_id=last.tenant_id,
                 prospect_id=prospect.id,
                 campaign_id=campaign_id,
-                parent_message_id=m.id,
-                step=2,
+                parent_message_id=last.id,
+                step=next_step,
                 channel=Channel.EMAIL,
                 angle=draft.angle,
                 hook_type=draft.hook_type,
@@ -745,6 +817,21 @@ def generate_followups(
     session.flush()
     log.info("followups_drafted", campaign_id=str(campaign_id), count=created)
     return created
+
+
+def list_followup_drafts(session: Session, campaign_id: uuid.UUID) -> list[Message]:
+    """Relance drafts awaiting the human gate (step >= 2, DRAFT)."""
+    return list(
+        session.scalars(
+            select(Message)
+            .where(
+                Message.campaign_id == campaign_id,
+                Message.step > 1,
+                Message.status == MessageStatus.DRAFT,
+            )
+            .order_by(Message.created_at)
+        )
+    )
 
 
 # ── simulate replies (stub channel only — populates a real number) ──────────
@@ -804,23 +891,27 @@ def simulate_replies(session: Session, *, campaign_id: uuid.UUID) -> int:
 
 @dataclass
 class CampaignReport:
+    """Reply rate counts UNIQUE PROSPECTS, never emails: with follow-ups one
+    prospect receives several touches, but they reply (or not) exactly once."""
+
     campaign: str
     prospects: int
     drafted: int
-    sent: int
+    sent: int  # emails that left (touches), informational only
     failed: int
-    replied: int
-    bounced: int
+    contacted: int  # unique prospects with >= 1 sent touch — THE denominator
+    replied: int  # unique prospects who replied — THE numerator
+    bounced: int  # unique prospects that bounced
     meetings: int
     sentiments: dict[str, int]
 
     @property
     def reply_rate(self) -> float:
-        return self.replied / self.sent if self.sent else 0.0
+        return self.replied / self.contacted if self.contacted else 0.0
 
     @property
     def bounce_rate(self) -> float:
-        return self.bounced / self.sent if self.sent else 0.0
+        return self.bounced / self.contacted if self.contacted else 0.0
 
 
 def build_report(session: Session, *, campaign_id: uuid.UUID) -> CampaignReport:
@@ -836,6 +927,10 @@ def build_report(session: Session, *, campaign_id: uuid.UUID) -> CampaignReport:
         select(Outcome).join(Message).where(Message.campaign_id == campaign_id)
     ).all()
 
+    msg_prospect = {m.id: m.prospect_id for m in messages}
+    contacted = {m.prospect_id for m in messages if m.status == MessageStatus.SENT}
+    replied_prospects = {msg_prospect[o.message_id] for o in outcomes if o.replied}
+    bounced_prospects = {msg_prospect[o.message_id] for o in outcomes if o.bounced}
     sentiments = Counter(
         o.reply_sentiment.value for o in outcomes if o.replied and o.reply_sentiment
     )
@@ -845,8 +940,9 @@ def build_report(session: Session, *, campaign_id: uuid.UUID) -> CampaignReport:
         drafted=len(messages),
         sent=sum(1 for m in messages if m.status == MessageStatus.SENT),
         failed=sum(1 for m in messages if m.status == MessageStatus.FAILED),
-        replied=sum(1 for o in outcomes if o.replied),
-        bounced=sum(1 for o in outcomes if o.bounced),
+        contacted=len(contacted),
+        replied=len(replied_prospects),
+        bounced=len(bounced_prospects),
         meetings=sum(1 for o in outcomes if o.meeting_booked),
         sentiments=dict(sentiments),
     )

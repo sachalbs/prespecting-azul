@@ -14,6 +14,8 @@ forbidden_patterns:
   - "synergie"
   - "calendly"                       # no meeting link before interest (§3bis)
   - "je n'ai pas eu de retour"       # negative CTA kills replies (§3bis)
+  - "je relance"                     # a relance never says it's one — new angle instead
+  - "petit up"                       # same: lazy follow-up tell
 
 max_words: 120
 max_questions: 1

@@ -36,6 +36,8 @@ DEFAULT_FORBIDDEN = [
     "synergie",
     "calendly",  # no meeting link before the prospect shows interest
     "je n'ai pas eu de retour",  # negative CTA kills replies
+    "je relance",  # a relance never says it's one — it brings a NEW angle
+    "petit up",  # same: lazy follow-up tell
 ]
 DEFAULT_MAX_WORDS = 120
 DEFAULT_MAX_QUESTIONS = 1

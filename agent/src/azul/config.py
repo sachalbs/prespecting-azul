@@ -105,6 +105,22 @@ class Settings(BaseSettings):
     # Up to 3 seed mailboxes (comma-separated) for `azul deliverability-check`.
     seed_inboxes: str | None = None
 
+    # Follow-ups — drafted for HUMAN approval (never auto-sent), like first touches.
+    # A prospect is eligible after this many days without a reply to the last touch.
+    followup_delay_days: int = 4
+    # Hard cap on relances per prospect (touches = 1 first email + max_followups).
+    max_followups: int = 2
+
+    # API cost tracking — prices in USD, adjust as providers change their pricing.
+    # Writer/LLM (DeepSeek default): $ per 1M tokens.
+    writer_price_in_per_mtok: float = 0.14
+    writer_price_out_per_mtok: float = 0.28
+    # Tavily: $ per API call (1 basic search = 1 credit ≈ $0.008 on the PAYG plan).
+    tavily_price_per_call: float = 0.008
+    # Holo3 computer-use: $ per 1M tokens (0 until pricing is pinned down).
+    holo_price_in_per_mtok: float = 0.0
+    holo_price_out_per_mtok: float = 0.0
+
     # Flywheel (later) — skills embedding dimension
     embedding_dim: int = Field(default=1024, ge=1)
 

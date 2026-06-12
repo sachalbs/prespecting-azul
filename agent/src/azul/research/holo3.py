@@ -24,6 +24,7 @@ import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from azul.config import get_settings
+from azul.costs import record_llm_usage
 from azul.domain import ProspectBrief
 from azul.errors import ConfigError, ResearchError
 from azul.logging import get_logger
@@ -220,7 +221,9 @@ class Holo3ResearchEngine(ResearchEngine):
             json={"model": self._model, "messages": messages, "temperature": 0},
         )
         resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]
+        data = resp.json()
+        record_llm_usage("holo", "research_step", data.get("usage"))
+        return data["choices"][0]["message"]
 
     @staticmethod
     def _viewport(page: Page) -> tuple[int, int]:

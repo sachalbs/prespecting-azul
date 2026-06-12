@@ -15,6 +15,7 @@ import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from azul.config import get_settings
+from azul.costs import record_llm_usage
 from azul.errors import ConfigError, LLMError
 from azul.logging import get_logger
 
@@ -68,7 +69,9 @@ def chat_json(
             payload.pop("response_format")
             resp = _post(payload, str(s.writer_base_url), str(s.writer_api_key), timeout)
         resp.raise_for_status()
-        content = resp.json()["choices"][0]["message"]["content"]
+        data = resp.json()
+        record_llm_usage("deepseek", "chat", data.get("usage"))
+        content = data["choices"][0]["message"]["content"]
     except httpx.HTTPError as exc:
         raise LLMError(f"LLM call failed: {exc}") from exc
     return _extract_json(str(content))

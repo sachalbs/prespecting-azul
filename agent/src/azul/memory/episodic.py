@@ -54,7 +54,7 @@ class EpisodicMemory:
         return outcome
 
     def _match_message(self, reply: InboundReply) -> Message | None:
-        """Resolve an inbound reply to the message we sent (by external id / dedup key)."""
+        """Resolve an inbound reply to the message we sent (thread, then address)."""
         # Bounces come from postmaster@ — match on the ORIGINAL recipient instead.
         if reply.is_bounce and reply.bounce_recipient:
             stmt = (
@@ -66,8 +66,10 @@ class EpisodicMemory:
             if msg:
                 return msg
         if reply.in_reply_to:
+            # Graph fills in_reply_to with the conversationId we persisted at send.
             stmt = select(Message).where(
-                (Message.external_id == reply.in_reply_to)
+                (Message.conversation_id == reply.in_reply_to)
+                | (Message.external_id == reply.in_reply_to)
                 | (Message.dedup_key == reply.in_reply_to)
             )
             msg = self.session.scalars(stmt).first()
@@ -110,6 +112,7 @@ class EpisodicMemory:
         )
         if not reply.is_bounce:
             self._mark_replied(message)
+            self._cancel_pending_followups(message)
         return outcome
 
     def _mark_replied(self, message: Message) -> None:
@@ -122,6 +125,21 @@ class EpisodicMemory:
         membership = self.session.scalars(stmt).first()
         if membership:
             membership.status = MembershipStatus.REPLIED
+
+    def _cancel_pending_followups(self, message: Message) -> None:
+        """They replied: every relance still in the pipe for them dies right now."""
+        pending = self.session.scalars(
+            select(Message).where(
+                Message.campaign_id == message.campaign_id,
+                Message.prospect_id == message.prospect_id,
+                Message.step > 1,
+                Message.status.in_([MessageStatus.DRAFT, MessageStatus.APPROVED]),
+            )
+        ).all()
+        for m in pending:
+            m.status = MessageStatus.SKIPPED
+            m.error = "cancelled: prospect replied"
+            log.info("followup_cancelled_on_reply", message_id=str(m.id), step=m.step)
 
     def recall(self, prospect_id: uuid.UUID) -> str | None:
         """A one-line relationship memory: have we touched this person before?"""

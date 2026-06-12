@@ -249,16 +249,17 @@ def report(campaign: str = typer.Option(..., help="Campaign id or name")) -> Non
     with session_scope() as session:
         c = camp.resolve_campaign(session, campaign)
         r = camp.build_report(session, campaign_id=c.id)
-    typer.echo(f"Campaign:   {r.campaign}")
-    typer.echo(f"Prospects:  {r.prospects}")
-    typer.echo(f"Drafted:    {r.drafted}")
-    typer.echo(f"Sent:       {r.sent}")
-    typer.echo(f"Failed:     {r.failed}")
-    typer.echo(f"Replied:    {r.replied}")
-    typer.echo(f"Meetings:   {r.meetings}")
-    typer.echo(f"Bounced:    {r.bounced}  ({r.bounce_rate:.0%})")
-    typer.echo(f"Sentiment:  {r.sentiments or '-'}")
-    typer.echo(f"REPLY RATE: {r.reply_rate:.0%}")
+    typer.echo(f"Campaign:    {r.campaign}")
+    typer.echo(f"Prospects:   {r.prospects}")
+    typer.echo(f"Drafted:     {r.drafted}")
+    typer.echo(f"Emails sent: {r.sent}  (touches, follow-ups included)")
+    typer.echo(f"Contacted:   {r.contacted}  (unique prospects — the denominator)")
+    typer.echo(f"Failed:      {r.failed}")
+    typer.echo(f"Replied:     {r.replied}  (unique prospects)")
+    typer.echo(f"Meetings:    {r.meetings}")
+    typer.echo(f"Bounced:     {r.bounced}  ({r.bounce_rate:.0%})")
+    typer.echo(f"Sentiment:   {r.sentiments or '-'}")
+    typer.echo(f"REPLY RATE:  {r.reply_rate:.0%}  (replied / contacted, unique prospects)")
 
 
 @app.command("auth-email")
@@ -314,13 +315,82 @@ def learn() -> None:
     typer.echo(f"Curated {n} skill pattern(s) from outcomes.")
 
 
-@app.command("follow-up")
-def follow_up(campaign: str = typer.Option(..., help="Campaign id or name")) -> None:
-    """Draft one follow-up for each prospect who hasn't replied (a child message)."""
+@app.command("followups")
+def followups(
+    campaign: str = typer.Option(..., help="Campaign id or name"),
+    sender: str | None = typer.Option(None, help="Sender name for the messages"),
+    value_prop: str | None = typer.Option(None, help="One-line value prop"),
+) -> None:
+    """Draft relances for silent prospects and show them for YOUR approval.
+
+    Eligibility: last touch >= FOLLOWUP_DELAY_DAYS ago, no reply/bounce, fewer
+    than MAX_FOLLOWUPS relances so far. Nothing is sent here — approve with
+    `azul approve`, then `azul send-approved`, same gates as first touches.
+    """
+    s = get_settings()
     with session_scope() as session:
         c = camp.resolve_campaign(session, campaign)
-        n = camp.generate_followups(session, campaign_id=c.id)
-    typer.echo(f"Drafted {n} follow-up(s).")
+        created = camp.generate_followups(
+            session, campaign_id=c.id, sender_name=sender, value_prop=value_prop
+        )
+        drafts = camp.list_followup_drafts(session, c.id)
+        cid = c.id
+        if not drafts:
+            typer.echo(
+                f"No relance to draft (delay {s.followup_delay_days}d, "
+                f"cap {s.max_followups}): everyone replied, bounced, is capped, "
+                "or their silence is too recent."
+            )
+            return
+        typer.echo(
+            f"{created} new relance(s) drafted (delay {s.followup_delay_days}d, "
+            f"cap {s.max_followups}). Awaiting YOUR approval:"
+        )
+        for m in drafts:
+            typer.echo("─" * 72)
+            typer.echo(f"id:      {m.id}")
+            typer.echo(
+                f"to:      {m.prospect.email}  ({m.prospect.company or '-'})"
+                f"  ·  relance #{m.step - 1}"
+            )
+            typer.echo(f"angle:   {m.angle or '-'}")
+            typer.echo(f"subject: {m.subject or '-'}")
+            typer.echo("")
+            typer.echo(m.body)
+        typer.echo("─" * 72)
+        typer.echo(
+            f"{len(drafts)} relance(s) awaiting approval. "
+            f"Approve with: azul approve --campaign {cid} --all (or --message <id>), "
+            f"then: azul send-approved --campaign {cid}"
+        )
+
+
+@app.command("cost")
+def cost(campaign: str = typer.Option(..., help="Campaign id or name")) -> None:
+    """What this campaign costs in external API calls (total, per prospect, per service)."""
+    from azul.costs import build_cost_summary
+
+    with session_scope() as session:
+        c = camp.resolve_campaign(session, campaign)
+        summary = build_cost_summary(session, campaign_id=c.id)
+        name = c.name
+    typer.echo(f"Campaign:  {name}")
+    typer.echo(f"API cost:  ${summary.total_usd:.4f}")
+    typer.echo(
+        f"Prospects: {summary.prospects_contacted} "
+        f"-> ${summary.cost_per_contacted_prospect:.4f} / prospect"
+    )
+    if not summary.by_service:
+        typer.echo("No API call recorded for this campaign (stub run, or pre-tracking).")
+        return
+    typer.echo("By service:")
+    for svc in summary.by_service:
+        tokens = (
+            f"  in={svc.tokens_in:,} out={svc.tokens_out:,} tok"
+            if svc.tokens_in or svc.tokens_out
+            else ""
+        )
+        typer.echo(f"  {svc.service:<10} {svc.calls:>4} call(s)  ${svc.cost_usd:.4f}{tokens}")
 
 
 @app.command("doctor")

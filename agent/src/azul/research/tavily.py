@@ -16,6 +16,7 @@ import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from azul.config import get_settings
+from azul.costs import record_call
 from azul.domain import ProspectBrief
 from azul.errors import ConfigError, ResearchError
 from azul.logging import get_logger
@@ -78,6 +79,7 @@ class TavilyResearchEngine(ResearchEngine):
     def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         resp = self._client.post(path, json=payload)
         resp.raise_for_status()
+        record_call("tavily", path.strip("/"))
         data: dict[str, Any] = resp.json()
         return data
 

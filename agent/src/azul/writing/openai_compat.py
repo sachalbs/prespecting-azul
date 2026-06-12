@@ -13,6 +13,7 @@ import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from azul.config import get_settings
+from azul.costs import record_llm_usage
 from azul.enums import HookType
 from azul.errors import ConfigError, WritingError
 from azul.logging import get_logger
@@ -66,6 +67,7 @@ class OpenAICompatWriter(Writer):
         resp = self._client.post("/chat/completions", json=payload)
         resp.raise_for_status()
         data: dict[str, Any] = resp.json()
+        record_llm_usage("deepseek", "draft", data.get("usage"))
         return data["choices"][0]["message"]["content"]
 
     def _complete_with_fallback(self, messages: list[dict[str, str]]) -> str:

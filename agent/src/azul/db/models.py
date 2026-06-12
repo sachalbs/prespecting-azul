@@ -180,6 +180,8 @@ class Message(UUIDMixin, TimestampMixin, Base):
     # Send bookkeeping
     sent_at: Mapped[datetime | None] = mapped_column(default=None)
     external_id: Mapped[str | None] = mapped_column(String(255), default=None)
+    # Provider thread id (Graph conversationId) — lets sync-replies match by thread.
+    conversation_id: Mapped[str | None] = mapped_column(String(255), index=True, default=None)
     error: Mapped[str | None] = mapped_column(Text, default=None)
 
     prospect: Mapped[Prospect] = relationship(back_populates="messages")
@@ -300,6 +302,31 @@ class DiscoveryCandidate(UUIDMixin, TimestampMixin, Base):
     prospect_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("prospects.id"), default=None
     )
+
+
+class ApiCall(UUIDMixin, TimestampMixin, Base):
+    """One external API call and its estimated cost — what a prospect costs us.
+
+    Attribution is best-effort via the cost context: campaign_id/prospect_id when
+    the caller knows them, prospect_label (email or company) when the prospect row
+    doesn't exist yet (research/draft happen before the upsert).
+    """
+
+    __tablename__ = "api_calls"
+
+    service: Mapped[str] = mapped_column(String(40), index=True)  # deepseek|tavily|holo
+    operation: Mapped[str] = mapped_column(String(60), default="")
+    campaign_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("campaigns.id"), index=True, default=None
+    )
+    prospect_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("prospects.id"), index=True, default=None
+    )
+    prospect_label: Mapped[str | None] = mapped_column(String(320), default=None)
+    calls: Mapped[int] = mapped_column(Integer, default=1)
+    tokens_in: Mapped[int] = mapped_column(Integer, default=0)
+    tokens_out: Mapped[int] = mapped_column(Integer, default=0)
+    cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
 
 
 class ConnectedAccount(UUIDMixin, TimestampMixin, Base):
