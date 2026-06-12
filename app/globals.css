@@ -26,6 +26,16 @@
     background: theme("colors.cobalt.600");
     color: white;
   }
+
+  /* Even line breaks on headings, fewer orphans in prose. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
 }
 
 @layer components {
@@ -37,7 +47,7 @@
     @apply font-display font-black uppercase leading-[0.92] tracking-[-0.02em];
   }
 
-  /* Technical, monospace micro-label — the spec-sheet voice. */
+  /* Technical, monospace micro-label: the spec-sheet voice. */
   .label {
     @apply inline-flex items-center gap-2.5 font-mono text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted;
   }
@@ -62,6 +72,11 @@
   .btn:disabled {
     transform: none;
     box-shadow: 5px 5px 0 0 theme("colors.ink");
+  }
+  /* Keyboard focus must stay visible (the @apply above clears the default). */
+  .btn:focus-visible {
+    outline: 3px solid theme("colors.ink");
+    outline-offset: 3px;
   }
 
   .btn-outline {
@@ -129,6 +144,16 @@
       linear-gradient(to bottom, rgba(17, 17, 20, 0.045) 1px, transparent 1px);
     background-size: 56px 56px;
   }
+  /* Diagonal "rejected / caution" hatching. */
+  .caution-stripes {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(17, 17, 20, 0.035) 0px,
+      rgba(17, 17, 20, 0.035) 1px,
+      transparent 1px,
+      transparent 11px
+    );
+  }
 }
 
 @keyframes rise {
@@ -157,7 +182,7 @@
   }
 }
 
-/* Brushed-aluminium backdrop — also the fallback when the bg video is blocked. */
+/* Brushed-aluminium backdrop, also the fallback when the bg video is blocked. */
 .metal-bg {
   background-color: #20242b;
   background-image:
@@ -191,7 +216,7 @@
   100% { transform: translateX(-28%); }
 }
 
-/* "BlendText" — the headline inverts against whatever moves behind it. */
+/* "BlendText": the headline inverts against whatever moves behind it. */
 .blend-text {
   mix-blend-mode: difference;
   color: #fff;
@@ -209,7 +234,7 @@
   }
 }
 
-/* Glossy blue 3D liquid blob — hero accent shape. */
+/* Glossy blue 3D liquid blob: hero accent shape. */
 .liquid-blob {
   border-radius: 60% 40% 55% 45% / 55% 50% 50% 45%;
   background: radial-gradient(
@@ -256,7 +281,7 @@
   mix-blend-mode: multiply;
 }
 
-/* Variant B — brushed/chrome aluminium (the floating metal thing). */
+/* Variant B: brushed/chrome aluminium (the floating metal thing). */
 .liquid-blob.is-metal {
   background:
     radial-gradient(120% 120% at 30% 22%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 36%),
@@ -271,7 +296,7 @@
     0 36px 80px -28px rgba(40, 48, 66, 0.55);
 }
 
-/* Variant C — blue chrome. */
+/* Variant C: blue chrome. */
 .liquid-blob.is-bluechrome {
   background:
     radial-gradient(120% 120% at 30% 22%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 34%),
@@ -291,9 +316,75 @@
   50% { transform: translateY(-14px) rotate(2.5deg); }
 }
 
+/* FAQ accordion: hide the native marker; the plus rotates into a cross. */
+.faq-summary::-webkit-details-marker {
+  display: none;
+}
+details[open] > .faq-summary .faq-icon {
+  transform: rotate(45deg);
+}
+
+/* Chat thread: messages stay visible by default and stagger in when played. */
+.thread-msg {
+  opacity: 1;
+}
+@keyframes msgIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Spec-sheet diagrams come alive: a radar ping, a draft pulse, emitting waves. */
+@keyframes stepPing {
+  0% { transform: scale(0.45); opacity: 0.6; }
+  75%, 100% { transform: scale(1.5); opacity: 0; }
+}
+@keyframes stepBlip {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes stepWave {
+  0%, 100% { opacity: 0.22; }
+  50% { opacity: 0.62; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .thread-playing .thread-msg {
+    animation: msgIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: var(--i, 0ms);
+  }
+  .anim-ping {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: stepPing 2.6s ease-out infinite;
+  }
+  .anim-blip {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: stepBlip 2.6s ease-in-out infinite;
+  }
+  .anim-wave {
+    animation: stepWave 2.4s ease-in-out infinite;
+  }
+  .anim-wave-2 {
+    animation: stepWave 2.4s ease-in-out 0.35s infinite;
+  }
+}
+
+/* Cursor trail is a pointer affordance: hide it on touch / no-hover devices. */
+@media (hover: none), (pointer: coarse) {
+  .cursor-trail {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .cursor-trail {
+    display: none;
   }
   .reveal,
   .rise,

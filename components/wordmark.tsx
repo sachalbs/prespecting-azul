@@ -1,4 +1,4 @@
-/** Wordmark lockup — "AZUL" + a cobalt square, in the ELYS spirit. */
+/** Wordmark lockup: "AZUL" + a cobalt square, in the ELYS spirit. */
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex items-end gap-[0.34rem] ${className}`}>
@@ -10,7 +10,7 @@ export function Wordmark({ className = "" }: { className?: string }) {
   );
 }
 
-/** Square cobalt tile with a white "A" — used as Azul's avatar in the chat. */
+/** Square cobalt tile with a white "A", used as Azul's avatar in the chat. */
 export function AzulTile({ className = "" }: { className?: string }) {
   return (
     <span

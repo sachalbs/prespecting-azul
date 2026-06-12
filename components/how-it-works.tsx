@@ -1,50 +1,33 @@
-import { Reveal } from "./reveal";
-import { Search, Pen, Loop } from "./icons";
+"use client";
 
-const steps = [
-  {
-    n: "01",
-    icon: <Search className="h-5 w-5" />,
-    title: "Recherche",
-    desc: "Levées, recrutements, stack, signaux d’intérêt. Du contexte réel, pas une variable {{prénom}}.",
-  },
-  {
-    n: "02",
-    icon: <Pen className="h-5 w-5" />,
-    title: "Rédaction",
-    desc: "Un message personnel et référencé, calé sur votre offre et votre ton. Jamais robot.",
-  },
-  {
-    n: "03",
-    icon: <Loop className="h-5 w-5" />,
-    title: "Envoi & apprentissage",
-    desc: "Vous validez les premiers, il calibre le reste, envoie et s’améliore campagne après campagne.",
-  },
-];
+import { Reveal } from "./reveal";
+import { StepVisual } from "./step-visuals";
+import { useLang } from "./lang-provider";
 
 export function HowItWorks() {
+  const { t } = useLang();
   return (
     <section id="how" className="shell py-20 sm:py-28">
       <Reveal className="max-w-3xl">
         <span className="label">
-          <span className="text-cobalt">02</span> / Le process
+          <span className="sq" />
+          {t.how.tag}
         </span>
-        <h2 className="mt-5 text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
-          De la recherche à la réponse, en trois temps.
+        <h2 className="mt-5 text-balance text-[clamp(1.9rem,4.4vw,3rem)] font-display font-black leading-[1.02] tracking-[-0.015em] text-ink">
+          {t.how.hPre}
+          <span className="text-cobalt">{t.how.hAccent}</span>
         </h2>
       </Reveal>
 
       <div className="mt-12 grid gap-px border border-ink/15 bg-ink/15 sm:grid-cols-3">
-        {steps.map((step, i) => (
-          <Reveal key={step.n} delay={i * 90} className="bg-paper">
+        {t.how.steps.map((step, i) => (
+          <Reveal key={i} delay={i * 90} className="bg-paper">
             <div className="flex h-full flex-col p-7">
               <div className="flex items-center justify-between">
                 <span className="font-display text-[2.5rem] font-black leading-none text-cobalt">
-                  {step.n}
+                  {`0${i + 1}`}
                 </span>
-                <span className="flex h-10 w-10 items-center justify-center border border-ink/15 text-ink">
-                  {step.icon}
-                </span>
+                <StepVisual index={i} />
               </div>
               <h3 className="mt-7 font-display text-[1.3rem] font-bold tracking-[-0.01em] text-ink">
                 {step.title}

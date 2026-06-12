@@ -3,12 +3,13 @@
 // Faithful port of the Framer "BackgroundRippleEffect" code component.
 // The only changes vs. the original are the Framer-editor-only imports
 // (addPropertyControls / ControlType / useIsStaticRenderer), which are stubbed
-// out — the runtime logic and framer-motion usage are identical.
+// out. The runtime logic and framer-motion usage are identical.
 
 import {
   useMemo,
   useRef,
   useState,
+  useEffect,
   startTransition,
   useCallback,
   type CSSProperties,
@@ -59,12 +60,35 @@ export default function BackgroundRippleEffect(props: Props) {
   const isStatic = useIsStaticRenderer();
   const isInView = useInView(containerRef, { once: false, margin: "100px" });
 
+  // Fill the whole container: derive the grid size from the measured box so the
+  // background spans the full width/height on any viewport (the original is a
+  // fixed-size centred grid, which left empty bands on the sides).
+  const [auto, setAuto] = useState<{ rows: number; cols: number } | null>(null);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      setAuto({
+        cols: Math.ceil(r.width / cellSize) + 1,
+        rows: Math.ceil(r.height / cellSize) + 1,
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [cellSize]);
+
+  const effRows = auto?.rows ?? rows;
+  const effCols = auto?.cols ?? cols;
+
   // Optimize for large grids by limiting cell count
   const maxCells = 1e3;
-  const totalCells = rows * cols;
+  const totalCells = effRows * effCols;
   const shouldVirtualize = totalCells > maxCells;
-  const actualRows = shouldVirtualize ? Math.min(rows, Math.floor(maxCells / cols)) : rows;
-  const actualCols = shouldVirtualize ? Math.min(cols, Math.floor(maxCells / rows)) : cols;
+  const actualRows = shouldVirtualize ? Math.min(effRows, Math.floor(maxCells / effCols)) : effRows;
+  const actualCols = shouldVirtualize ? Math.min(effCols, Math.floor(maxCells / effRows)) : effCols;
 
   const cells = useMemo(
     () => Array.from({ length: actualRows * actualCols }, (_, idx) => idx),
