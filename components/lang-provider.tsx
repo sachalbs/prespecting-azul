@@ -172,7 +172,7 @@ const dict = {
       teamsBtn: "Add to Teams",
       pick: "Select a channel above",
       noteLabel: "Outlook?",
-      note: "Later, in the conversation — Azul sends you a link when it needs it.",
+      note: "Later, in the conversation. Azul sends you a link when it needs it.",
     },
   },
   fr: {
@@ -336,7 +336,7 @@ const dict = {
       teamsBtn: "Ajouter à Teams",
       pick: "Choisis un canal ci-dessus",
       noteLabel: "Outlook ?",
-      note: "Plus tard, dans la conversation — Azul t’envoie un lien quand il en a besoin.",
+      note: "Plus tard, dans la conversation. Azul t’envoie un lien quand il en a besoin.",
     },
   },
 } as const;
