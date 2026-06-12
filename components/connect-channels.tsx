@@ -133,10 +133,10 @@ export function ConnectChannels() {
       {/* action panel: re-enters on every change of mind */}
       <div className="enter mt-8" style={{ "--d": "420ms" } as CSSProperties}>
         {selected === null ? (
-          <div className="grid-paper flex min-h-[8.5rem] items-center gap-4 border border-line bg-panel px-6 sm:px-8">
+          <div className="grid-paper flex min-h-[11rem] flex-col items-center justify-center gap-4 border border-line bg-panel p-8 text-center">
             <span
               aria-hidden
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cobalt text-white motion-safe:animate-bounce"
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-cobalt text-white motion-safe:animate-bounce"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -145,7 +145,7 @@ export function ConnectChannels() {
                 strokeWidth={2.4}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="h-5 w-5"
+                className="h-6 w-6"
               >
                 <path d="M12 19V5" />
                 <path d="m6 11 6-6 6 6" />
