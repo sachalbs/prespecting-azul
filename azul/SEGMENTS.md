@@ -1,9 +1,11 @@
 # Segments
 
 Palier en cours : **palier 1 — objectif 10 % de réponses stables** (puis 20 %,
-35 %, 50 %). Baseline mesurée du compte : **5,7 %** (séquence Apollo
-`comptables`, 418 délivrés, cf. `ENGINE.md`). Les compteurs ci-dessous sont
-cumulés ; ils se mettent à jour à chaque rétro, jamais de tête.
+35 %, 50 %). **Azul : 0 envoi à ce jour.** Benchmark à battre : 5,7 %, score
+de la campagne Apollo manuelle pré-Azul (cf. `ENGINE.md` — ce chiffre n'est
+pas une performance d'Azul). Les compteurs `Stats` ci-dessous ne comptent que
+les envois d'Azul, recalculables depuis `campaigns/log.csv` ; ils se mettent à
+jour à chaque rétro, jamais de tête.
 
 ---
 
@@ -88,21 +90,30 @@ Apprentissages (datés, chiffrés) :
 
 ---
 
-## SEG-04 · Experts-comptables (le seul segment avec des données réelles)
+## SEG-04 · Experts-comptables
 
-Profil      : cabinets d'expertise comptable (séquence Apollo `comptables`).
-Déclencheurs: à définir — la séquence historique n'en utilisait aucun
+Segment hérité du marché déjà travaillé manuellement (campagne Apollo
+`comptables`, pré-Azul). Les chiffres de cette campagne sont un **benchmark
+humain**, pas des stats d'Azul : ils ne rentrent jamais dans la ligne `Stats`.
+
+Profil      : cabinets d'expertise comptable.
+Déclencheurs: à définir — la campagne manuelle n'en utilisait aucun
               (candidats : offres d'emploi collaborateur, période fiscale,
               changement d'outil, croissance du cabinet).
-Douleur     : à valider via l'analyse des 24 réponses reçues.
-Angle       : inconnu — le copy des 3 étapes vit dans Apollo, à auditer.
+Douleur     : à valider via l'analyse des 24 réponses du benchmark.
+Angle       : à définir — le copy des 3 étapes manuelles vit dans Apollo,
+              à auditer comme matière première, pas comme modèle.
 Ton         : à définir après analyse des réponses.
-CTA         : la séquence a converti 3 démos sur 24 réponses (12,5 % des
-              répondants) → le CTA actuel perd 7 répondants sur 8.
-Ne pas faire: re-blaster les 418 déjà contactés ; séquence unique sans segment.
+CTA         : à définir.
+Ne pas faire: recontacter les 418 prospects de la campagne manuelle ;
+              séquence unique sans segment.
 
-Stats       : envoyés=418 · réponses=24 · positives≥3 (démos) · taux=5,7 % · taux qualifié≥0,7 %
+Benchmark humain (Apollo `comptables`, 2026-01→04, ne pas cumuler ici) :
+              418 délivrés · 24 réponses (5,7 %) · 3 démos · 1,2 % hard bounce ·
+              CTA : 3 démos / 24 réponses = 7 répondants sur 8 perdus.
+
+Stats       : envoyés=0 · réponses=0 · positives=0 · taux=— · taux qualifié=—
 Apprentissages (datés, chiffrés) :
-- 2026-06-12 : baseline héritée d'Apollo. 5 hard bounces (1,2 %), Apollo marque
-  les 3 étapes sous-performantes. Première action : lire les 24 réponses et
-  qualifier qui répond, avant tout nouvel envoi.
+- 2026-06-12 : benchmark établi (cf. ci-dessus et `ENGINE.md`). Azul devra
+  battre 5,7 % dès son premier batch pour valider sa thèse. Première action
+  avant tout envoi : lire les 24 réponses du benchmark et qualifier qui répond.

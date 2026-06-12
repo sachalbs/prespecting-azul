@@ -1,75 +1,71 @@
-# État du moteur (audit du 2026-06-12)
+# État des lieux prospection (audit du 2026-06-12, corrigé)
 
-Le "moteur" d'Azul n'est pas du code : c'est **Apollo + une boîte mail +
-cette session agent**. Cet audit photographie ce qui existe, les chiffres
-réels, et le chemin vers 50 %.
+**Source des données : le compte Apollo personnel de Sacha**, lu via le
+connecteur MCP Apollo (`apollo_emailer_campaigns_search`,
+`apollo_email_accounts_index`). Ces chiffres décrivent la prospection
+**manuelle, historique, pré-Azul**. Ils ne sont PAS le bilan d'Azul.
 
-## Architecture actuelle
+## Deux choses à ne jamais confondre
 
-| Brique | État réel |
-|---|---|
-| Sourcing | Apollo (+ Lusha, VibeProspecting connectés mais inutilisés) |
-| Envoi | 1 seule boîte : `sachalbs@outlook.com`, **domaine gratuit** (Exchange) |
-| Séquences | 2 dans Apollo : `comptables` (active), `GOOGLE FORM` (morte) |
-| Lecture des réponses | **Impossible pour l'agent** : Gmail MCP non activé, boîte Outlook |
-| Mémoire / apprentissage | Aucune avant `azul/` (créé ce jour) ; Notion vide |
-| A/B testing | Jamais utilisé (`ab_test_step_ids: []` partout) |
+### 1. La campagne Apollo historique (humaine, pré-Azul)
 
-## Les chiffres réels (baseline, pas de la théorie)
+Prospection menée à la main depuis le compte Apollo, boîte d'envoi
+`sachalbs@outlook.com` (domaine gratuit, Exchange) :
 
-Séquence `comptables` (créée 2026-01-18, dernier envoi 2026-04-28, 3 étapes) :
+- Séquence `comptables` (2026-01-18 → 2026-04-28, 3 étapes, générique,
+  sans segment ni déclencheur) : 423 envoyés, 418 délivrés, 5 hard bounces
+  (1,2 %), **24 réponses (5,7 %)**, 3 démos (0,7 %). Apollo la classe
+  `is_performing_poorly`, les 3 étapes sous-performantes. Aucun A/B test.
+- Séquence `GOOGLE FORM` (sept. 2025) : 75 délivrés, 0 réponse, abandonnée.
 
-- 423 envoyés, 418 délivrés, 5 hard bounces (1,2 %)
-- **24 réponses → 5,7 % de taux de réponse**
-- 3 démos (0,7 %)
-- Open tracking actif sur seulement 24 envois → opens inexploitables
-- Apollo la classe lui-même `is_performing_poorly`, les 3 étapes sous-performantes
+Statut : c'est un **benchmark**, pas une performance d'Azul. Sa valeur :
+(a) il fixe la barre à battre sur le marché des experts-comptables — un
+templé générique y fait 5,7 % ; (b) ses 24 réponses sont une mine
+d'information jamais analysée sur qui répond et pourquoi.
 
-Séquence `GOOGLE FORM` : 75 délivrés, 0 réponse, abandonnée sans post-mortem.
+### 2. Azul (l'agent)
 
-**Le vrai point de départ est 5,7 %, pas 0.** L'écart vers 50 % est un ×9.
+- **Envois : 0. Réponses : 0. Taux : aucun — il n'existe pas encore.**
+- Azul n'est aujourd'hui que : sa doctrine (`azul/PLAYBOOK.md`,
+  `SEGMENTS.md`, `EXPERIMENTS.md`, `campaigns/log.csv`, tous vierges de
+  données d'envoi) + les connecteurs disponibles (Apollo, Lusha,
+  VibeProspecting, Calendar ; pas d'accès en lecture à une boîte mail).
+- Son premier batch sera son premier point de données. Tout chiffre
+  attribué à Azul doit provenir de `campaigns/log.csv`, de rien d'autre.
 
-## Ce qui cloche (par ordre d'impact)
+## Ce que le benchmark humain apprend à Azul (sans se l'approprier)
 
-1. **Domaine d'envoi gratuit.** Un outbound depuis `@outlook.com` plafonne la
-   délivrabilité et la crédibilité, et on ne contrôle ni SPF/DKIM/DMARC ni la
-   réputation. C'est le goulot n°1 : aucun travail de copy ne rattrape un
-   message qui n'arrive pas en boîte principale.
-2. **Volume générique.** 418 prospects dans une seule séquence templée à
-   3 étapes : exactement l'approche "première vague AI SDR" que la marque
-   dénonce. Aucun segment, aucun déclencheur daté, aucune personnalisation.
-3. **La boucle ne se ferme pas.** L'agent ne peut pas lire les réponses
-   (pas d'accès boîte mail). Les 24 réponses de `comptables`, la donnée la
-   plus précieuse du compte, n'ont jamais été analysées : qui a répondu,
-   à quelle étape, avec quels mots, pourquoi 21 n'ont pas pris de démo.
-4. **Zéro expérimentation.** Pas un seul A/B test en 9 mois d'existence du
-   compte. Sans variable testée, le taux ne peut pas monter, il dérive.
-5. **Moteur à l'arrêt** depuis le 28 avril : la réputation retombe et les
-   signaux sourcés périment (un déclencheur > 60 jours est mort).
-6. Pas de plafond d'envoi/jour configuré (`max_emails_per_day: null`).
+- Le marché expert-comptable répond à ~5,7 % à du templé 3 étapes sans
+  personnalisation : c'est le plancher. Si Azul, avec recherche prospect
+  et micro-batches, ne bat pas nettement ce chiffre, sa thèse est fausse.
+- Le CTA historique convertissait 3 démos sur 24 réponses : 7 répondants
+  sur 8 perdus après la réponse. Le traitement de la réponse compte autant
+  que l'obtenir.
+- 1,2 % de hard bounce : la qualité d'enrichissement Apollo était correcte.
+- 0/75 sur `GOOGLE FORM` : un envoi sans angle clair ne produit rien,
+  même petit volume.
 
-## Chemin vers 50 % (dans l'ordre, pas en parallèle)
+## Contraintes d'infra (communes aux deux, à lever avant le 1er envoi d'Azul)
 
-**Phase 0 — Infra (préalable à tout envoi)**
-- Acheter un domaine secondaire dédié (ex. variante du domaine principal),
-  configurer SPF/DKIM/DMARC, 1 à 2 boîtes, warmup 3 semaines.
-- Donner à l'agent un accès en lecture à la boîte de réponse (Gmail MCP sur
-  une boîte Google Workspace, ou relevé manuel hebdomadaire à défaut) :
-  sans lecture des réponses, la boucle de `PLAYBOOK.md` est impossible.
+1. **La seule boîte d'envoi connectée est `sachalbs@outlook.com`, domaine
+   gratuit.** Si Azul envoie depuis cette boîte, il hérite du plafond de
+   délivrabilité et de la réputation existante. Prérequis : domaine
+   secondaire dédié + SPF/DKIM/DMARC + warmup ~3 semaines.
+2. **Azul ne peut pas lire les réponses** (Gmail MCP non activé, boîte
+   Outlook). Sans lecture des réponses, la boucle mesure→rétro du playbook
+   est inapplicable : accès mail en lecture, ou relevé manuel hebdomadaire.
 
-**Phase 1 — Exploiter l'existant (aucun envoi nécessaire)**
-- Analyser les 24 réponses de `comptables` dans Apollo : extraire qui répond
-  (taille de cabinet, rôle, étape de la séquence) et écrire les premiers
-  apprentissages chiffrés dans `SEGMENTS.md` (SEG-04).
-- Post-mortem de `GOOGLE FORM` (0/75) : comprendre, archiver.
+## Plan de lancement d'Azul (dans l'ordre)
 
-**Phase 2 — Premier batch nouvelle doctrine**
-- Micro-batch ≤ 20 sur SEG-04 (le seul segment avec des données), sourcé sur
-  déclencheurs (Apollo job postings, signaux Lusha), 1 variable testée
-  (EXP-001 adaptée), tout logué dans `campaigns/log.csv`.
-- Objectif du palier : 10 % stable, puis on monte (cf. PLAYBOOK).
-
-**Phase 3 — Industrialiser la boucle**
-- Chaque session de prospection suit `CLAUDE.md` : lire le cerveau, envoyer
-  petit, mesurer à J+4/J+10, rétro, committer. Le taux par segment dans
-  `SEGMENTS.md` est l'unique tableau de bord.
+- **Phase 0 — Infra** : domaine + boîtes + warmup ; accès lecture réponses.
+- **Phase 1 — Apprendre du benchmark (0 envoi)** : analyser les 24 réponses
+  de la campagne historique dans Apollo (qui répond : taille de cabinet,
+  rôle, étape) → premiers apprentissages chiffrés dans `SEGMENTS.md`
+  (SEG-04), clairement étiquetés "benchmark humain".
+- **Phase 2 — Premier batch Azul** : ≤ 20 prospects sur SEG-04, sourcés sur
+  déclencheurs datés, 1 variable testée, exclusion stricte des 418 déjà
+  contactés, tout logué dans `campaigns/log.csv`. C'est la ligne 1 de
+  l'historique d'Azul.
+- **Phase 3 — La boucle** : mesure J+4/J+10, rétro chiffrée, commit, batch
+  suivant. Objectif palier 1 : battre le benchmark (> 5,7 %), viser 10 %
+  stable, puis 20, 35, 50.
