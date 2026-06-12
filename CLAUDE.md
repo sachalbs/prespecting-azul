@@ -105,3 +105,12 @@ place so the next milestones slot in without a rewrite.
 - Every external engine behind an interface → swappable.
 - Observability: log every touch + outcome; the flywheel depends on it.
 - **Idempotent sends** (never double-send). Rate-limit / space sends (deliverability).
+
+## Mémoire opérateur : `azul/`
+
+The engine is `agent/`; the source of truth for sends and results is the
+`outcomes` table. The `azul/` folder is the **operator memory**: human
+benchmarks (e.g. the manual pre-Azul Apollo campaign — 5.7% reply on 418
+delivered, the bar Azul must beat) and operator-side doctrine notes
+(PLAYBOOK / SEGMENTS / EXPERIMENTS / BENCHMARK). It never duplicates engine
+numbers: any figure attributed to Azul must be recomputable from the DB.
