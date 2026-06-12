@@ -2,10 +2,10 @@
 
 import { useState, type CSSProperties, type ReactElement } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { SlackMark, WhatsAppMark, TeamsMark, WideArrow } from "./icons";
+import { SlackMark, WhatsAppMark, TeamsMark, TelegramMark, WideArrow } from "./icons";
 import { useLang } from "./lang-provider";
 
-type Channel = "whatsapp" | "slack" | "teams";
+type Channel = "whatsapp" | "slack" | "teams" | "telegram";
 
 /* Placeholder destinations: swap in the real number / OAuth URLs at launch. */
 const WHATSAPP_LINK = "https://wa.me/PLACEHOLDER?text=Bonjour%20Azul";
@@ -13,11 +13,13 @@ const SLACK_OAUTH_URL =
   "https://slack.com/oauth/v2/authorize?client_id=PLACEHOLDER&scope=PLACEHOLDER";
 const TEAMS_OAUTH_URL =
   "https://login.microsoftonline.com/common/adminconsent?client_id=PLACEHOLDER";
+const TELEGRAM_LINK = "https://t.me/PLACEHOLDER";
 
 const marks: Record<Channel, (props: { className?: string }) => ReactElement> = {
   whatsapp: WhatsAppMark,
   slack: SlackMark,
   teams: TeamsMark,
+  telegram: TelegramMark,
 };
 
 function ChannelCard({
@@ -87,7 +89,7 @@ export function ConnectChannels() {
   const { t } = useLang();
   const c = t.connect;
   const [selected, setSelected] = useState<Channel | null>(null);
-  const order: Channel[] = ["whatsapp", "slack", "teams"];
+  const order: Channel[] = ["whatsapp", "slack", "teams", "telegram"];
 
   return (
     <section className="shell flex flex-1 flex-col justify-center py-14 sm:py-20">
@@ -114,7 +116,7 @@ export function ConnectChannels() {
 
       {/* the three channels, in the spec-sheet grid of the landing */}
       <div
-        className="enter mt-10 grid gap-px border border-ink/15 bg-ink/15 sm:grid-cols-3"
+        className="enter mt-10 grid gap-px border border-ink/15 bg-ink/15 sm:grid-cols-2 lg:grid-cols-4"
         style={{ "--d": "320ms" } as CSSProperties}
       >
         {order.map((channel, i) => (
@@ -221,6 +223,36 @@ export function ConnectChannels() {
                   {c.teamsBtn}
                   <WideArrow className="h-3 w-6" />
                 </a>
+              </div>
+            )}
+
+            {selected === "telegram" && (
+              <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-center sm:gap-12">
+                <div className="shrink-0 border-2 border-ink bg-white p-4">
+                  <QRCodeSVG
+                    value={TELEGRAM_LINK}
+                    size={184}
+                    level="M"
+                    bgColor="#FFFFFF"
+                    fgColor="#111114"
+                    aria-label="QR code Telegram"
+                  />
+                </div>
+                <div className="flex flex-col items-center gap-5 sm:items-start">
+                  <span className="label">
+                    <span className="sq" />
+                    {c.waScan}
+                  </span>
+                  <a
+                    href={TELEGRAM_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-outline"
+                  >
+                    {c.waOpen}
+                    <WideArrow className="h-2.5 w-5" />
+                  </a>
+                </div>
               </div>
             )}
           </div>

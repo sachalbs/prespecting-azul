@@ -159,6 +159,18 @@ export function TeamsMark(props: IconProps) {
   );
 }
 
+export function TelegramMark(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...props}>
+      <circle cx="12" cy="12" r="12" fill="#26A5E4" />
+      <path
+        fill="#fff"
+        d="M5.4 11.7c3.5-1.5 5.8-2.5 7-3 3.3-1.4 4-1.6 4.5-1.6.1 0 .3 0 .5.2.1.1.2.3.2.4v.6c-.2 1.9-1 6.5-1.4 8.6-.2.9-.5 1.2-.9 1.2-.7.1-1.3-.5-2-1-1.1-.7-1.8-1.2-2.8-1.9-1.2-.8-.4-1.3.3-2 .2-.2 3.3-3 3.4-3.3 0 0 0-.2-.1-.2-.1-.1-.2 0-.3 0l-5.5 3.5c-.5.4-1 .5-1.4.5-.5 0-1.4-.2-2-.4-.8-.3-1.5-.4-1.4-.9 0-.2.3-.4.9-.7Z"
+      />
+    </svg>
+  );
+}
+
 export function MailMark(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
