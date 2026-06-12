@@ -171,7 +171,8 @@ const dict = {
       slackBtn: "Add to Slack",
       teamsBtn: "Add to Teams",
       pick: "Select a channel above",
-      note: "Outlook? Later, in the conversation — Azul sends you a link when it needs it.",
+      noteLabel: "Outlook?",
+      note: "Later, in the conversation — Azul sends you a link when it needs it.",
     },
   },
   fr: {
@@ -334,7 +335,8 @@ const dict = {
       slackBtn: "Add to Slack",
       teamsBtn: "Ajouter à Teams",
       pick: "Choisis un canal ci-dessus",
-      note: "Outlook ? Plus tard, dans la conversation — Azul t’envoie un lien quand il en a besoin.",
+      noteLabel: "Outlook ?",
+      note: "Plus tard, dans la conversation — Azul t’envoie un lien quand il en a besoin.",
     },
   },
 } as const;

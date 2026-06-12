@@ -211,12 +211,15 @@ export function ConnectChannels() {
       </div>
 
       {/* the deliberate non-decision: Outlook comes later, in the thread */}
-      <p
-        className="enter mt-8 border-t border-line pt-5 font-mono text-[0.7rem] uppercase tracking-label text-muted"
+      <div
+        className="enter mt-8 flex items-start gap-3.5 border border-line bg-panel p-5 sm:p-6"
         style={{ "--d": "520ms" } as CSSProperties}
       >
-        {c.note}
-      </p>
+        <span className="sq mt-[0.45rem]" aria-hidden />
+        <p className="text-[0.95rem] leading-relaxed text-muted">
+          <span className="font-semibold text-ink">{c.noteLabel}</span> {c.note}
+        </p>
+      </div>
     </section>
   );
 }
