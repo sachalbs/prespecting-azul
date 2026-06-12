@@ -1,5 +1,8 @@
 # Playbook prospection Azul
 
+> **Le moteur est `agent/`. La source de vérité des envois est la table
+> `outcomes`. Ce dossier = benchmarks humains et notes opérateur.**
+
 Objectif unique : le **taux de réponse qualifiée**. Pas le volume. La cible
 long terme est 50 % de réponses ; on y tend par paliers mesurés, jamais par
 affirmation.

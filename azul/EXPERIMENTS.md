@@ -1,5 +1,8 @@
 # Expériences
 
+> **Le moteur est `agent/`. La source de vérité des envois est la table
+> `outcomes`. Ce dossier = benchmarks humains et notes opérateur.**
+
 Une expérience = une variable, déclarée AVANT l'envoi, tranchée par un chiffre.
 Jamais plus d'une expérience active par segment.
 

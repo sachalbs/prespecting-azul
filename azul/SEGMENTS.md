@@ -1,10 +1,14 @@
 # Segments
 
+> **Le moteur est `agent/`. La source de vérité des envois est la table
+> `outcomes`. Ce dossier = benchmarks humains et notes opérateur.**
+
 Palier en cours : **palier 1 — objectif 10 % de réponses stables** (puis 20 %,
 35 %, 50 %). **Azul : 0 envoi à ce jour.** Benchmark à battre : 5,7 %, score
-de la campagne Apollo manuelle pré-Azul (cf. `ENGINE.md` — ce chiffre n'est
+de la campagne Apollo manuelle pré-Azul (cf. `BENCHMARK.md` — ce chiffre n'est
 pas une performance d'Azul). Les compteurs `Stats` ci-dessous ne comptent que
-les envois d'Azul, recalculables depuis `campaigns/log.csv` ; ils se mettent à
+les envois d'Azul, recalculables depuis la table `outcomes` du moteur (et
+`campaigns/log.csv` pour les batches pilotés à la main) ; ils se mettent à
 jour à chaque rétro, jamais de tête.
 
 ---
@@ -114,6 +118,6 @@ Benchmark humain (Apollo `comptables`, 2026-01→04, ne pas cumuler ici) :
 
 Stats       : envoyés=0 · réponses=0 · positives=0 · taux=— · taux qualifié=—
 Apprentissages (datés, chiffrés) :
-- 2026-06-12 : benchmark établi (cf. ci-dessus et `ENGINE.md`). Azul devra
+- 2026-06-12 : benchmark établi (cf. ci-dessus et `BENCHMARK.md`). Azul devra
   battre 5,7 % dès son premier batch pour valider sa thèse. Première action
   avant tout envoi : lire les 24 réponses du benchmark et qualifier qui répond.
