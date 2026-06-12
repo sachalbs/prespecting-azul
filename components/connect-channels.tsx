@@ -133,9 +133,13 @@ export function ConnectChannels() {
       {/* action panel: re-enters on every change of mind */}
       <div className="enter mt-8" style={{ "--d": "420ms" } as CSSProperties}>
         {selected === null ? (
-          <div className="caution-stripes flex min-h-[8.5rem] items-center justify-center border border-dashed border-ink/30 p-8">
-            <p className="font-mono text-[0.74rem] uppercase tracking-label text-muted">
-              {c.pick}
+          <div className="grid-paper flex min-h-[8.5rem] items-center border border-line bg-panel px-6 sm:px-8">
+            <p className="font-mono text-[0.74rem] uppercase tracking-[0.14em] text-muted">
+              <span className="text-ink">azul</span> // {c.pick}
+              <span
+                aria-hidden
+                className="ml-1.5 inline-block h-[0.78em] w-[7px] translate-y-[0.08em] animate-blink bg-cobalt align-baseline"
+              />
             </p>
           </div>
         ) : (
